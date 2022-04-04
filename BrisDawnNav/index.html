@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <link rel="stylesheet" href="css/leaflet.css">
+        <link rel="stylesheet" href="css/qgis2web.css">
+        <link rel="stylesheet" href="css/L.Control.Layers.Tree.css">
+        <style>
+        html, body, #map {
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+        }
+        </style>
+        <title></title>
+    </head>
+    <body>
+        <div id="map">
+        </div>
+        <script src="js/qgis2web_expressions.js"></script>
+        <script src="js/leaflet.js"></script>
+        <script src="js/leaflet.rotatedMarker.js"></script>
+        <script src="js/leaflet.pattern.js"></script>
+        <script src="js/leaflet-hash.js"></script>
+        <script src="js/Autolinker.min.js"></script>
+        <script src="js/rbush.min.js"></script>
+        <script src="js/labelgun.min.js"></script>
+        <script src="js/labels.js"></script>
+        <script src="js/L.Control.Layers.Tree.js"></script>
+        <script>
+        var map = L.map('map', {
+            zoomControl:true, maxZoom:28, minZoom:1
+        }).fitBounds([[-27.666235192229163,152.81229763663626],[-27.399642057898554,153.18426722717703]]);
+        map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
+        
+        // Baselayers
+        var layer_GoogleSatellite = L.tileLayer('http://www.google.cn/maps/vt?lyrs=s@189&gl=cn&x={x}&y={y}&z={z}', {
+            opacity: 0.5,
+            attribution: '',
+            minZoom: 1,
+            maxZoom: 28,
+            minNativeZoom: 0,
+            maxNativeZoom: 18
+        });
+        map.addLayer(layer_GoogleSatellite);
+        var layer_OpenStreetMap = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            opacity: 0.5,
+            attribution: '',
+            minZoom: 1,
+            maxZoom: 28,
+            minNativeZoom: 0,
+            maxNativeZoom: 19
+        });
+        map.addLayer(layer_OpenStreetMap);
+        
+        // Overlay maps
+        var img_BrisDawnNavP1 = 'data/BrisDawnNavP1.png';
+        var img_bounds_BrisDawnNavP1 = [[-27.54797156194818,153.01623],[-27.5184164412872,153.0582734040032]];
+        var layer_BrisDawnNavP1 = new L.imageOverlay(img_BrisDawnNavP1,
+                                              img_bounds_BrisDawnNavP1);
+        map.addLayer(layer_BrisDawnNavP1);
+        //
+        var img_BrisDawnNavP2 = 'data/BrisDawnNavP2.png';
+        var img_bounds_BrisDawnNavP2 = [[-27.499568332301234,153.05953249999996],[-27.470011442655302,153.10155992644792]];
+        var layer_BrisDawnNavP2 = new L.imageOverlay(img_BrisDawnNavP2,
+                                              img_bounds_BrisDawnNavP2);
+        map.addLayer(layer_BrisDawnNavP2);
+        //
+        var img_BrisDawnNavS1W1 = 'data/BrisDawnNavS1W1.png';
+        var img_bounds_BrisDawnNavS1W1 = [[-27.529512001208747,153.05920749999999],[-27.499958944014885,153.10126236810993]];
+        var layer_BrisDawnNavS1W1 = new L.imageOverlay(img_BrisDawnNavS1W1,
+                                              img_bounds_BrisDawnNavS1W1);
+        map.addLayer(layer_BrisDawnNavS1W1);
+        //
+        var img_BrisDawnNavS1W2 = 'data/BrisDawnNavS1W2.png';
+        var img_bounds_BrisDawnNavS1W2 = [[-27.547939295931442,153.02405000000002],[-27.518378938970937,153.06610083951333]];
+        var layer_BrisDawnNavS1W2 = new L.imageOverlay(img_BrisDawnNavS1W2,
+                                              img_bounds_BrisDawnNavS1W2);
+        map.addLayer(layer_BrisDawnNavS1W2);
+        //
+        var img_BrisDawnNavS1W3 = 'data/BrisDawnNavS1W3.png';
+        var img_bounds_BrisDawnNavS1W3 = [[-27.557445524409765,153.05961999999997],[-27.527602082079806,153.08628879098825]];
+        var layer_BrisDawnNavS1W3 = new L.imageOverlay(img_BrisDawnNavS1W3,
+                                              img_bounds_BrisDawnNavS1W3);
+        map.addLayer(layer_BrisDawnNavS1W3);
+        //
+        var img_BrisDawnNavS1W4 = 'data/BrisDawnNavS1W4.png';
+        var img_bounds_BrisDawnNavS1W4 = [[-27.508113716549797,152.95513],[-27.47082752601491,152.98842928017064]];
+        var layer_BrisDawnNavS1W4 = new L.imageOverlay(img_BrisDawnNavS1W4,
+                                              img_bounds_BrisDawnNavS1W4);
+        map.addLayer(layer_BrisDawnNavS1W4);
+        //
+        var img_BrisDawnNavS1W5 = 'data/BrisDawnNavS1W5.png';
+        var img_bounds_BrisDawnNavS1W5 = [[-27.46206539598293,152.99595250000002],[-27.432508941258305,153.03796501116773]];
+        var layer_BrisDawnNavS1W5 = new L.imageOverlay(img_BrisDawnNavS1W5,
+                                              img_bounds_BrisDawnNavS1W5);
+        map.addLayer(layer_BrisDawnNavS1W5);
+        //
+        var img_BrisDawnNavS1W6 = 'data/BrisDawnNavS1W6.png';
+        var img_bounds_BrisDawnNavS1W6 = [[-27.51016924651552,152.98899999999998],[-27.480618944819504,153.031043556472]];
+        var layer_BrisDawnNavS1W6 = new L.imageOverlay(img_BrisDawnNavS1W6,
+                                              img_bounds_BrisDawnNavS1W6);
+        map.addLayer(layer_BrisDawnNavS1W6);
+        //
+        var img_BrisDawnNavS1W7 = 'data/BrisDawnNavS1W7.png';
+        var img_bounds_BrisDawnNavS1W7 = [[-27.555875995661623,152.96563],[-27.518587524573757,152.99896724532843]];
+        var layer_BrisDawnNavS1W7 = new L.imageOverlay(img_BrisDawnNavS1W7,
+                                              img_bounds_BrisDawnNavS1W7);
+        map.addLayer(layer_BrisDawnNavS1W7);
+        //
+        var img_BrisDawnNavS1W8 = 'data/BrisDawnNavS1W8.png';
+        var img_bounds_BrisDawnNavS1W8 = [[-27.63788874555385,153.07222],[-27.600587532565903,153.1055980280545]];
+        var layer_BrisDawnNavS1W8 = new L.imageOverlay(img_BrisDawnNavS1W8,
+                                              img_bounds_BrisDawnNavS1W8);
+        map.addLayer(layer_BrisDawnNavS1W8);
+        //
+        var img_BrisDawnNavS1W9 = 'data/BrisDawnNavS1W9.png';
+        var img_bounds_BrisDawnNavS1W9 = [[-27.473963874228673,152.94707000000002],[-27.44440894108754,152.98908488135285]];
+        var layer_BrisDawnNavS1W9 = new L.imageOverlay(img_BrisDawnNavS1W9,
+                                              img_bounds_BrisDawnNavS1W9);
+        map.addLayer(layer_BrisDawnNavS1W9);
+        //
+        var img_BrisDawnNavS1W10 = 'data/BrisDawnNavS1W10.png';
+        var img_bounds_BrisDawnNavS1W10 = [[-27.49341219017608,153.06549],[-27.46385894453462,153.10753134683523]];
+        var layer_BrisDawnNavS1W10 = new L.imageOverlay(img_BrisDawnNavS1W10,
+                                              img_bounds_BrisDawnNavS1W10);
+        map.addLayer(layer_BrisDawnNavS1W10);
+        //
+        var img_BrisDawnNavS1Bonus = 'data/BrisDawnNavS1Bonus.png';
+        var img_bounds_BrisDawnNavS1Bonus = [[-27.489649999999994,153.01297],[-27.449587652002005,153.04487477069736]];
+        var layer_BrisDawnNavS1Bonus = new L.imageOverlay(img_BrisDawnNavS1Bonus,
+                                              img_bounds_BrisDawnNavS1Bonus);
+        map.addLayer(layer_BrisDawnNavS1Bonus);
+        //
+        var img_BrisDawnNavS2W1 = 'data/BrisDawnNavS2W1.png';
+        var img_bounds_BrisDawnNavS2W1 = [[-27.561899609388366,153.02293],[-27.53232644055914,153.0649987966645]];
+        var layer_BrisDawnNavS2W1 = new L.imageOverlay(img_BrisDawnNavS2W1,
+                                              img_bounds_BrisDawnNavS2W1);
+        map.addLayer(layer_BrisDawnNavS2W1);
+        //
+        var img_BrisDawnNavS2W2 = 'data/BrisDawnNavS2W2.png';
+        var img_bounds_BrisDawnNavS2W2 = [[-27.562070000000002,152.94609],[-27.538479077126002,152.98374980115503]];
+        var layer_BrisDawnNavS2W2 = new L.imageOverlay(img_BrisDawnNavS2W2,
+                                              img_bounds_BrisDawnNavS2W2);
+        map.addLayer(layer_BrisDawnNavS2W2);
+        //
+        var img_BrisDawnNavS2W3p1 = 'data/BrisDawnNavS2W3p1.png';
+        var img_bounds_BrisDawnNavS2W3p1 = [[-27.483259999999998,152.96322],[-27.456551769710998,152.9844898471319]];
+        var layer_BrisDawnNavS2W3p1 = new L.imageOverlay(img_BrisDawnNavS2W3p1,
+                                              img_bounds_BrisDawnNavS2W3p1);
+        map.addLayer(layer_BrisDawnNavS2W3p1);
+        //
+        var img_BrisDawnNavS2W3p2 = 'data/BrisDawnNavS2W3p2.png';
+        var img_bounds_BrisDawnNavS2W3p2 = [[-27.483660866800175,152.96495999999996],[-27.471835656958906,152.98177338484294]];
+        var layer_BrisDawnNavS2W3p2 = new L.imageOverlay(img_BrisDawnNavS2W3p2,
+                                              img_bounds_BrisDawnNavS2W3p2);
+        map.addLayer(layer_BrisDawnNavS2W3p2);
+        //
+        var img_BrisDawnNavS2W4 = 'data/BrisDawnNavS2W4.png';
+        var img_bounds_BrisDawnNavS2W4 = [[-27.49211999999999,152.99514],[-27.468529077129443,153.03276976941544]];
+        var layer_BrisDawnNavS2W4 = new L.imageOverlay(img_BrisDawnNavS2W4,
+                                              img_bounds_BrisDawnNavS2W4);
+        map.addLayer(layer_BrisDawnNavS2W4);
+        //
+        var img_BrisDawnNavS2W5 = 'data/BrisDawnNavS2W5.png';
+        var img_bounds_BrisDawnNavS2W5 = [[-27.521319999999996,152.99809000000005],[-27.49772907712803,153.03572977999494]];
+        var layer_BrisDawnNavS2W5 = new L.imageOverlay(img_BrisDawnNavS2W5,
+                                              img_bounds_BrisDawnNavS2W5);
+        map.addLayer(layer_BrisDawnNavS2W5);
+        //
+        var img_BrisDawnNavS2W6 = 'data/BrisDawnNavS2W6.png';
+        var img_bounds_BrisDawnNavS2W6 = [[-27.516520000000003,153.06422000000003],[-27.492929077128252,153.10185977999492]];
+        var layer_BrisDawnNavS2W6 = new L.imageOverlay(img_BrisDawnNavS2W6,
+                                              img_bounds_BrisDawnNavS2W6);
+        map.addLayer(layer_BrisDawnNavS2W6);
+        //
+        var img_BrisDawnNavS2W7 = 'data/BrisDawnNavS2W7.png';
+        var img_bounds_BrisDawnNavS2W7 = [[-27.473989999999997,153.04931],[-27.440604711073092,153.07589230659877]];
+        var layer_BrisDawnNavS2W7 = new L.imageOverlay(img_BrisDawnNavS2W7,
+                                              img_bounds_BrisDawnNavS2W7);
+        map.addLayer(layer_BrisDawnNavS2W7);
+        //
+        var img_BrisDawnNavS2W8p1 = 'data/BrisDawnNavS2W8p1.png';
+        var img_bounds_BrisDawnNavS2W8p1 = [[-27.468089999999997,153.01052999999996],[-27.458655632059,153.02557590141774]];
+        var layer_BrisDawnNavS2W8p1 = new L.imageOverlay(img_BrisDawnNavS2W8p1,
+                                              img_bounds_BrisDawnNavS2W8p1);
+        map.addLayer(layer_BrisDawnNavS2W8p1);
+        //
+        var img_BrisDawnNavS2W8p2 = 'data/BrisDawnNavS2W8p2.png';
+        var img_bounds_BrisDawnNavS2W8p2 = [[-27.46567,153.00762999999998],[-27.43896176971354,153.02889984713187]];
+        var layer_BrisDawnNavS2W8p2 = new L.imageOverlay(img_BrisDawnNavS2W8p2,
+                                              img_bounds_BrisDawnNavS2W8p2);
+        map.addLayer(layer_BrisDawnNavS2W8p2);
+        //
+        var img_BrisDawnNavS2W9 = 'data/BrisDawnNavS2W9.png';
+        var img_bounds_BrisDawnNavS2W9 = [[-27.503580000000003,153.01426999999998],[-27.47998907712883,153.0518997694154]];
+        var layer_BrisDawnNavS2W9 = new L.imageOverlay(img_BrisDawnNavS2W9,
+                                              img_bounds_BrisDawnNavS2W9);
+        map.addLayer(layer_BrisDawnNavS2W9);
+        //
+        var img_BrisDawnNavS2W10 = 'data/BrisDawnNavS2W10.png';
+        var img_bounds_BrisDawnNavS2W10 = [[-27.453429999999994,152.97016000000002],[-27.429839077131355,153.00777975883602]];
+        var layer_BrisDawnNavS2W10 = new L.imageOverlay(img_BrisDawnNavS2W10,
+                                              img_bounds_BrisDawnNavS2W10);
+        map.addLayer(layer_BrisDawnNavS2W10);
+        //
+        var img_BrisDawnNavS2Bonus = 'data/BrisDawnNavS2Bonus.png';
+        var img_bounds_BrisDawnNavS2Bonus = [[-27.462479999999992,152.90026999999998],[-27.434166890423853,152.9454077042545]];
+        var layer_BrisDawnNavS2Bonus = new L.imageOverlay(img_BrisDawnNavS2Bonus,
+                                              img_bounds_BrisDawnNavS2Bonus);
+        map.addLayer(layer_BrisDawnNavS2Bonus);
+        //
+        var img_BrisDawnNavS3W1 = 'data/BrisDawnNavS3W1.png';
+        var img_bounds_BrisDawnNavS3W1 = [[-27.51598,153.08932000000001],[-27.492389077128298,153.1269597799949]];
+        var layer_BrisDawnNavS3W1 = new L.imageOverlay(img_BrisDawnNavS3W1,
+                                              img_bounds_BrisDawnNavS3W1);
+        map.addLayer(layer_BrisDawnNavS3W1);
+        //
+        var img_BrisDawnNavS3W2 = 'data/BrisDawnNavS3W2.png';
+        var img_bounds_BrisDawnNavS3W2 = [[-27.477299999999996,153.02998999999997],[-27.44391471107231,153.05658231123047]];
+        var layer_BrisDawnNavS3W2 = new L.imageOverlay(img_BrisDawnNavS3W2,
+                                              img_bounds_BrisDawnNavS3W2);
+        map.addLayer(layer_BrisDawnNavS3W2);
+        //
+        var img_BrisDawnNavS3W3 = 'data/BrisDawnNavS3W3.png';
+        var img_bounds_BrisDawnNavS3W3 = [[-27.541735888804432,153.06589249999996],[-27.50443753472041,153.0992387375426]];
+        var layer_BrisDawnNavS3W3 = new L.imageOverlay(img_BrisDawnNavS3W3,
+                                              img_bounds_BrisDawnNavS3W3);
+        map.addLayer(layer_BrisDawnNavS3W3);
+        //
+        var img_BrisDawnNavS3W4 = 'data/BrisDawnNavS3W4.png';
+        var img_bounds_BrisDawnNavS3W4 = [[-27.48573759999359,152.9627375],[-27.456178940392835,153.00476216663876]];
+        var layer_BrisDawnNavS3W4 = new L.imageOverlay(img_BrisDawnNavS3W4,
+                                              img_bounds_BrisDawnNavS3W4);
+        map.addLayer(layer_BrisDawnNavS3W4);
+        //
+        var img_BrisDawnNavS3W5 = 'data/BrisDawnNavS3W5.png';
+        var img_bounds_BrisDawnNavS3W5 = [[-27.527341696096517,153.02013],[-27.490047535675895,153.05346812567453]];
+        var layer_BrisDawnNavS3W5 = new L.imageOverlay(img_BrisDawnNavS3W5,
+                                              img_bounds_BrisDawnNavS3W5);
+        map.addLayer(layer_BrisDawnNavS3W5);
+        //
+        var img_BrisDawnNavS3W6 = 'data/BrisDawnNavS3W6.png';
+        var img_bounds_BrisDawnNavS3W6 = [[-27.490847752264795,153.05089999999998],[-27.461288944045936,153.09292682691594]];
+        var layer_BrisDawnNavS3W6 = new L.imageOverlay(img_BrisDawnNavS3W6,
+                                              img_bounds_BrisDawnNavS3W6);
+        map.addLayer(layer_BrisDawnNavS3W6);
+        //
+        var img_BrisDawnNavS3W7 = 'data/BrisDawnNavS3W7.png';
+        var img_bounds_BrisDawnNavS3W7 = [[-27.530181715643664,152.96424000000002],[-27.494716650751148,153.01468103174204]];
+        var layer_BrisDawnNavS3W7 = new L.imageOverlay(img_BrisDawnNavS3W7,
+                                              img_bounds_BrisDawnNavS3W7);
+        map.addLayer(layer_BrisDawnNavS3W7);
+        //
+        var img_BrisDawnNavS3W8 = 'data/BrisDawnNavS3W8.png';
+        var img_bounds_BrisDawnNavS3W8 = [[-27.449595405157762,153.00366249999996],[-27.41231252602135,153.0369625976673]];
+        var layer_BrisDawnNavS3W8 = new L.imageOverlay(img_BrisDawnNavS3W8,
+                                              img_bounds_BrisDawnNavS3W8);
+        map.addLayer(layer_BrisDawnNavS3W8);
+        //
+        var img_BrisDawnNavS3W9 = 'data/BrisDawnNavS3W9.png';
+        var img_bounds_BrisDawnNavS3W9 = [[-27.5117412066438,152.92799000000005],[-27.482181442480343,152.97002616027328]];
+        var layer_BrisDawnNavS3W9 = new L.imageOverlay(img_BrisDawnNavS3W9,
+                                              img_bounds_BrisDawnNavS3W9);
+        map.addLayer(layer_BrisDawnNavS3W9);
+        //
+        var img_BrisDawnNavS3W10 = 'data/BrisDawnNavS3W10.png';
+        var img_bounds_BrisDawnNavS3W10 = [[-27.56200210121245,153.03553749999998],[-27.53242894301972,153.07760632078907]];
+        var layer_BrisDawnNavS3W10 = new L.imageOverlay(img_BrisDawnNavS3W10,
+                                              img_bounds_BrisDawnNavS3W10);
+        map.addLayer(layer_BrisDawnNavS3W10);
+        //
+        var img_BrisDawnNavS3Bonus = 'data/BrisDawnNavS3Bonus.png';
+        var img_bounds_BrisDawnNavS3Bonus = [[-27.648000000000003,153.06464],[-27.607937651949985,153.0965947938568]];
+        var layer_BrisDawnNavS3Bonus = new L.imageOverlay(img_BrisDawnNavS3Bonus,
+                                              img_bounds_BrisDawnNavS3Bonus);
+        map.addLayer(layer_BrisDawnNavS3Bonus);
+        
+        var overlaysTree = {
+            label: 'Bris Dawn Nav',
+            selectAllCheckbox: true,
+                    children: [
+                        {
+                            label: 'Preview Weeks',
+                            selectAllCheckbox: true,
+                            children: [
+                                { label: 'Bris Dawn Nav P1', layer: layer_BrisDawnNavP1 },
+                                { label: 'Bris Dawn Nav P2', layer: layer_BrisDawnNavP2 },
+                            ]
+                        },
+                        {
+                            label: 'Series 1',
+                            selectAllCheckbox: true,
+                            children: [
+                                { label: 'Bris Dawn Nav S1 W1', layer: layer_BrisDawnNavS1W1 },
+                                { label: 'Bris Dawn Nav S1 W2', layer: layer_BrisDawnNavS1W2 },
+                                { label: 'Bris Dawn Nav S1 W3', layer: layer_BrisDawnNavS1W3 },
+                                { label: 'Bris Dawn Nav S1 W4', layer: layer_BrisDawnNavS1W4 },
+                                { label: 'Bris Dawn Nav S1 W5', layer: layer_BrisDawnNavS1W5 },
+                                { label: 'Bris Dawn Nav S1 W6', layer: layer_BrisDawnNavS1W6 },
+                                { label: 'Bris Dawn Nav S1 W7', layer: layer_BrisDawnNavS1W7 },
+                                { label: 'Bris Dawn Nav S1 W8', layer: layer_BrisDawnNavS1W8 },
+                                { label: 'Bris Dawn Nav S1 W9', layer: layer_BrisDawnNavS1W9 },
+                                { label: 'Bris Dawn Nav S1 W10', layer: layer_BrisDawnNavS1W10 },
+                                { label: 'Bris Dawn Nav S1 Bonus', layer: layer_BrisDawnNavS1Bonus },
+                            ]
+                        },
+                        {
+                            label: 'Series 2',
+                            selectAllCheckbox: true,
+                            children: [
+                                { label: 'Bris Dawn Nav S2 W1', layer: layer_BrisDawnNavS2W1 },
+                                { label: 'Bris Dawn Nav S2 W2', layer: layer_BrisDawnNavS2W2 },
+                                { label: 'Bris Dawn Nav S2 W3 p1', layer: layer_BrisDawnNavS2W3p1 },
+                                { label: 'Bris Dawn Nav S2 W3 p2', layer: layer_BrisDawnNavS2W3p2 },
+                                { label: 'Bris Dawn Nav S2 W4', layer: layer_BrisDawnNavS2W4 },
+                                { label: 'Bris Dawn Nav S2 W5', layer: layer_BrisDawnNavS2W5 },
+                                { label: 'Bris Dawn Nav S2 W6', layer: layer_BrisDawnNavS2W6 },
+                                { label: 'Bris Dawn Nav S2 W7', layer: layer_BrisDawnNavS2W7 },
+                                { label: 'Bris Dawn Nav S2 W8 p1', layer: layer_BrisDawnNavS2W8p1 },
+                                { label: 'Bris Dawn Nav S2 W8 p2', layer: layer_BrisDawnNavS2W8p2 },
+                                { label: 'Bris Dawn Nav S2 W9', layer: layer_BrisDawnNavS2W9 },
+                                { label: 'Bris Dawn Nav S2 W10', layer: layer_BrisDawnNavS2W10 },
+                                { label: 'Bris Dawn Nav S2 Bonus', layer: layer_BrisDawnNavS2Bonus },
+                            ]
+                        },
+                        {
+                            label: 'Series 3',
+                            selectAllCheckbox: true,
+                            children: [
+                                { label: 'Bris Dawn Nav S3 W1', layer: layer_BrisDawnNavS3W1 },
+                                { label: 'Bris Dawn Nav S3 W2', layer: layer_BrisDawnNavS3W2 },
+                                { label: 'Bris Dawn Nav S3 W3', layer: layer_BrisDawnNavS3W3 },
+                                { label: 'Bris Dawn Nav S3 W4', layer: layer_BrisDawnNavS3W4 },
+                                { label: 'Bris Dawn Nav S3 W5', layer: layer_BrisDawnNavS3W5 },
+                                { label: 'Bris Dawn Nav S3 W6', layer: layer_BrisDawnNavS3W6 },
+                                { label: 'Bris Dawn Nav S3 W7', layer: layer_BrisDawnNavS3W7 },
+                                { label: 'Bris Dawn Nav S3 W8', layer: layer_BrisDawnNavS3W8 },
+                                { label: 'Bris Dawn Nav S3 W9', layer: layer_BrisDawnNavS3W9 },
+                                { label: 'Bris Dawn Nav S3 W10', layer: layer_BrisDawnNavS3W10 },
+                                { label: 'Bris Dawn Nav S3 Bonus', layer: layer_BrisDawnNavS3Bonus },
+                            ]
+                        },
+                        { label: 'Series 4 - Coming soon' },
+                        { label: 'Holiday Editions - Coming soon' },
+                    ]
+        };
+        var baseTree = {}
+        /*var baseTree = {
+            label: 'Base Layers',
+                    children: [
+                        { label: 'Google Satellite', layer: layer_GoogleSatellite },
+                        { label: 'OpenStreetMap', layer: layer_OpenStreetMap },
+                    ]
+        };*/
+        var lay = L.control.layers.tree(baseTree, overlaysTree,
+            {
+                selectorBack: true,
+                collapsed: false,
+            });
+        lay.addTo(map);
+        </script>
+    </body>
+</html>
