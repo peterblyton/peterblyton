@@ -293,6 +293,12 @@
                                               img_bounds_BrisDawnNavH2);
         map.addLayer(layer_BrisDawnNavH2);
         //
+        var img_BrisDawnNavS4W1 = 'data/BrisDawnNavS4W1.png';
+        var img_bounds_BrisDawnNavS4W1 = [[-27.511562030463715,152.99767],[-27.482001441956765,153.0397072639678]];
+        var layer_BrisDawnNavS4W1 = new L.imageOverlay(img_BrisDawnNavS4W1,
+                                              img_bounds_BrisDawnNavS4W1);
+        map.addLayer(layer_BrisDawnNavS4W1);
+        //
         var overlaysTree = {
             label: 'Bris Dawn Nav',
             selectAllCheckbox: true,
@@ -366,7 +372,13 @@
                                 { label: 'Bris Dawn Nav H2', layer: layer_BrisDawnNavH2 },
                             ]
                         },
-                        { label: 'Series 4 - Coming soon' },
+                        {
+                            label: 'Series 4',
+                            selectAllCheckbox: true,
+                            children: [
+                                { label: 'Bris Dawn Nav S4 W1', layer: layer_BrisDawnNavS4W1 },
+                            ]
+                        },
                     ]
         };
         var baseTree = {}
