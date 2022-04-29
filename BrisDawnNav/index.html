@@ -299,6 +299,12 @@
                                               img_bounds_BrisDawnNavS4W1);
         map.addLayer(layer_BrisDawnNavS4W1);
         //
+        var img_BrisDawnNavS4W2 = 'data/BrisDawnNavS4W2.png';
+        var img_bounds_BrisDawnNavS4W2 = [[-27.496029999999994,153.10404999999994],[-27.472439077129252,153.14167976941536]];
+        var layer_BrisDawnNavS4W2 = new L.imageOverlay(img_BrisDawnNavS4W2,
+                                              img_bounds_BrisDawnNavS4W2);
+        map.addLayer(layer_BrisDawnNavS4W2);
+        //
         var overlaysTree = {
             label: 'Bris Dawn Nav',
             selectAllCheckbox: true,
@@ -377,6 +383,7 @@
                             selectAllCheckbox: true,
                             children: [
                                 { label: 'Bris Dawn Nav S4 W1', layer: layer_BrisDawnNavS4W1 },
+                                { label: 'Bris Dawn Nav S4 W2', layer: layer_BrisDawnNavS4W2 },
                             ]
                         },
                     ]
