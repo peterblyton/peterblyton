@@ -305,6 +305,18 @@
                                               img_bounds_BrisDawnNavS4W2);
         map.addLayer(layer_BrisDawnNavS4W2);
         //
+        var img_BrisDawnNavS4W3 = 'data/BrisDawnNavS4W3.png';
+        var img_bounds_BrisDawnNavS4W3 = [[-27.488702103936244,152.97461880386174],[-27.44841894308247,153.02002035164094]];
+        var layer_BrisDawnNavS4W3 = new L.imageOverlay(img_BrisDawnNavS4W3,
+                                              img_bounds_BrisDawnNavS4W3);
+        map.addLayer(layer_BrisDawnNavS4W3);
+        //
+        var img_BrisDawnNavS4W4 = 'data/BrisDawnNavS4W4.png';
+        var img_bounds_BrisDawnNavS4W4 = [[-27.554758829333693,153.0411094752152],[-27.513975836654314,153.08332460000713]];
+        var layer_BrisDawnNavS4W4 = new L.imageOverlay(img_BrisDawnNavS4W4,
+                                              img_bounds_BrisDawnNavS4W4);
+        map.addLayer(layer_BrisDawnNavS4W4);
+        //
         var overlaysTree = {
             label: 'Bris Dawn Nav',
             selectAllCheckbox: true,
@@ -312,6 +324,7 @@
                         {
                             label: 'Preview Weeks',
                             selectAllCheckbox: true,
+                            collapsed: true,
                             children: [
                                 { label: 'Bris Dawn Nav P1', layer: layer_BrisDawnNavP1 },
                                 { label: 'Bris Dawn Nav P2', layer: layer_BrisDawnNavP2 },
@@ -320,6 +333,7 @@
                         {
                             label: 'Series 1',
                             selectAllCheckbox: true,
+                            collapsed: true,
                             children: [
                                 { label: 'Bris Dawn Nav S1 W1', layer: layer_BrisDawnNavS1W1 },
                                 { label: 'Bris Dawn Nav S1 W2', layer: layer_BrisDawnNavS1W2 },
@@ -337,6 +351,7 @@
                         {
                             label: 'Series 2',
                             selectAllCheckbox: true,
+                            collapsed: true,
                             children: [
                                 { label: 'Bris Dawn Nav S2 W1', layer: layer_BrisDawnNavS2W1 },
                                 { label: 'Bris Dawn Nav S2 W2', layer: layer_BrisDawnNavS2W2 },
@@ -356,6 +371,7 @@
                         {
                             label: 'Series 3',
                             selectAllCheckbox: true,
+                            collapsed: true,
                             children: [
                                 { label: 'Bris Dawn Nav S3 W1', layer: layer_BrisDawnNavS3W1 },
                                 { label: 'Bris Dawn Nav S3 W2', layer: layer_BrisDawnNavS3W2 },
@@ -373,6 +389,7 @@
                         {
                             label: 'Holiday Editions',
                             selectAllCheckbox: true,
+                            collapsed: true,
                             children: [
                                 { label: 'Bris Dawn Nav H1', layer: layer_BrisDawnNavH1 },
                                 { label: 'Bris Dawn Nav H2', layer: layer_BrisDawnNavH2 },
@@ -381,9 +398,12 @@
                         {
                             label: 'Series 4',
                             selectAllCheckbox: true,
+                            collapsed: false,
                             children: [
                                 { label: 'Bris Dawn Nav S4 W1', layer: layer_BrisDawnNavS4W1 },
                                 { label: 'Bris Dawn Nav S4 W2', layer: layer_BrisDawnNavS4W2 },
+                                { label: 'Bris Dawn Nav S4 W3', layer: layer_BrisDawnNavS4W3 },
+                                { label: 'Bris Dawn Nav S4 W4', layer: layer_BrisDawnNavS4W4 },
                             ]
                         },
                     ]
