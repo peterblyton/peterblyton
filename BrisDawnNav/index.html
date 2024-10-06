@@ -7,8 +7,9 @@
         <meta name="mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-capable" content="yes">
         <link rel="stylesheet" href="css/leaflet.css">
-        <link rel="stylesheet" href="css/qgis2web.css">
         <link rel="stylesheet" href="css/L.Control.Layers.Tree.css">
+        <link rel="stylesheet" href="css/qgis2web.css">
+        <link rel="stylesheet" href="css/fontawesome-all.min.css">
         <style>
         html, body, #map {
             width: 100%;
@@ -24,6 +25,7 @@
         </div>
         <script src="js/qgis2web_expressions.js"></script>
         <script src="js/leaflet.js"></script>
+        <script src="js/L.Control.Layers.Tree.min.js"></script>
         <script src="js/leaflet.rotatedMarker.js"></script>
         <script src="js/leaflet.pattern.js"></script>
         <script src="js/leaflet-hash.js"></script>
@@ -31,24 +33,51 @@
         <script src="js/rbush.min.js"></script>
         <script src="js/labelgun.min.js"></script>
         <script src="js/labels.js"></script>
-        <script src="js/L.Control.Layers.Tree.js"></script>
         <script>
         var map = L.map('map', {
-            zoomControl:true, maxZoom:28, minZoom:1
-        }).fitBounds([[-27.666235192229163,152.81229763663626],[-27.399642057898554,153.18426722717703]]);
+            zoomControl:false, maxZoom:28, minZoom:1
+        }).fitBounds([[-27.548765466397672,152.8801595516087],[-27.396342779083955,153.204503210849]]);
+        var hash = new L.Hash(map);
         map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
-        
-        // Baselayers
-        var layer_GoogleSatellite = L.tileLayer('http://www.google.cn/maps/vt?lyrs=s@189&gl=cn&x={x}&y={y}&z={z}', {
-            opacity: 0.5,
-            attribution: '',
-            minZoom: 1,
-            maxZoom: 28,
-            minNativeZoom: 0,
-            maxNativeZoom: 18
-        });
-        map.addLayer(layer_GoogleSatellite);
-        var layer_OpenStreetMap = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
+        // remove popup's row if "visible-with-data"
+        function removeEmptyRowsFromPopupContent(content, feature) {
+         var tempDiv = document.createElement('div');
+         tempDiv.innerHTML = content;
+         var rows = tempDiv.querySelectorAll('tr');
+         for (var i = 0; i < rows.length; i++) {
+             var td = rows[i].querySelector('td.visible-with-data');
+             var key = td ? td.id : '';
+             if (td && td.classList.contains('visible-with-data') && feature.properties[key] == null) {
+                 rows[i].parentNode.removeChild(rows[i]);
+             }
+         }
+         return tempDiv.innerHTML;
+        }
+        // add class to format popup if it contains media
+		function addClassToPopupIfMedia(content, popup) {
+			var tempDiv = document.createElement('div');
+			tempDiv.innerHTML = content;
+			if (tempDiv.querySelector('td img')) {
+				popup._contentNode.classList.add('media');
+					// Delay to force the redraw
+					setTimeout(function() {
+						popup.update();
+					}, 10);
+			} else {
+				popup._contentNode.classList.remove('media');
+			}
+		}
+        var zoomControl = L.control.zoom({
+            position: 'topleft'
+        }).addTo(map);
+        var bounds_group = new L.featureGroup([]);
+        function setBounds() {
+        }
+        map.createPane('pane_OpenStreetMap_0');
+        map.getPane('pane_OpenStreetMap_0').style.zIndex = 400;
+        var layer_OpenStreetMap_0 = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            pane: 'pane_OpenStreetMap_0',
             opacity: 0.5,
             attribution: '',
             minZoom: 1,
@@ -56,393 +85,1720 @@
             minNativeZoom: 0,
             maxNativeZoom: 19
         });
-        map.addLayer(layer_OpenStreetMap);
-        
-        // Overlay maps
-        var img_BrisDawnNavP1 = 'data/BrisDawnNavP1.png';
-        var img_bounds_BrisDawnNavP1 = [[-27.54797156194818,153.01623],[-27.5184164412872,153.0582734040032]];
-        var layer_BrisDawnNavP1 = new L.imageOverlay(img_BrisDawnNavP1,
-                                              img_bounds_BrisDawnNavP1);
-        map.addLayer(layer_BrisDawnNavP1);
-        //
-        var img_BrisDawnNavP2 = 'data/BrisDawnNavP2.png';
-        var img_bounds_BrisDawnNavP2 = [[-27.499568332301234,153.05953249999996],[-27.470011442655302,153.10155992644792]];
-        var layer_BrisDawnNavP2 = new L.imageOverlay(img_BrisDawnNavP2,
-                                              img_bounds_BrisDawnNavP2);
-        map.addLayer(layer_BrisDawnNavP2);
-        //
-        var img_BrisDawnNavS1W1 = 'data/BrisDawnNavS1W1.png';
-        var img_bounds_BrisDawnNavS1W1 = [[-27.529512001208747,153.05920749999999],[-27.499958944014885,153.10126236810993]];
-        var layer_BrisDawnNavS1W1 = new L.imageOverlay(img_BrisDawnNavS1W1,
-                                              img_bounds_BrisDawnNavS1W1);
-        map.addLayer(layer_BrisDawnNavS1W1);
-        //
-        var img_BrisDawnNavS1W2 = 'data/BrisDawnNavS1W2.png';
-        var img_bounds_BrisDawnNavS1W2 = [[-27.547939295931442,153.02405000000002],[-27.518378938970937,153.06610083951333]];
-        var layer_BrisDawnNavS1W2 = new L.imageOverlay(img_BrisDawnNavS1W2,
-                                              img_bounds_BrisDawnNavS1W2);
-        map.addLayer(layer_BrisDawnNavS1W2);
-        //
-        var img_BrisDawnNavS1W3 = 'data/BrisDawnNavS1W3.png';
-        var img_bounds_BrisDawnNavS1W3 = [[-27.557445524409765,153.05961999999997],[-27.527602082079806,153.08628879098825]];
-        var layer_BrisDawnNavS1W3 = new L.imageOverlay(img_BrisDawnNavS1W3,
-                                              img_bounds_BrisDawnNavS1W3);
-        map.addLayer(layer_BrisDawnNavS1W3);
-        //
-        var img_BrisDawnNavS1W4 = 'data/BrisDawnNavS1W4.png';
-        var img_bounds_BrisDawnNavS1W4 = [[-27.508113716549797,152.95513],[-27.47082752601491,152.98842928017064]];
-        var layer_BrisDawnNavS1W4 = new L.imageOverlay(img_BrisDawnNavS1W4,
-                                              img_bounds_BrisDawnNavS1W4);
-        map.addLayer(layer_BrisDawnNavS1W4);
-        //
-        var img_BrisDawnNavS1W5 = 'data/BrisDawnNavS1W5.png';
-        var img_bounds_BrisDawnNavS1W5 = [[-27.46206539598293,152.99595250000002],[-27.432508941258305,153.03796501116773]];
-        var layer_BrisDawnNavS1W5 = new L.imageOverlay(img_BrisDawnNavS1W5,
-                                              img_bounds_BrisDawnNavS1W5);
-        map.addLayer(layer_BrisDawnNavS1W5);
-        //
-        var img_BrisDawnNavS1W6 = 'data/BrisDawnNavS1W6.png';
-        var img_bounds_BrisDawnNavS1W6 = [[-27.51016924651552,152.98899999999998],[-27.480618944819504,153.031043556472]];
-        var layer_BrisDawnNavS1W6 = new L.imageOverlay(img_BrisDawnNavS1W6,
-                                              img_bounds_BrisDawnNavS1W6);
-        map.addLayer(layer_BrisDawnNavS1W6);
-        //
-        var img_BrisDawnNavS1W7 = 'data/BrisDawnNavS1W7.png';
-        var img_bounds_BrisDawnNavS1W7 = [[-27.555875995661623,152.96563],[-27.518587524573757,152.99896724532843]];
-        var layer_BrisDawnNavS1W7 = new L.imageOverlay(img_BrisDawnNavS1W7,
-                                              img_bounds_BrisDawnNavS1W7);
-        map.addLayer(layer_BrisDawnNavS1W7);
-        //
-        var img_BrisDawnNavS1W8 = 'data/BrisDawnNavS1W8.png';
-        var img_bounds_BrisDawnNavS1W8 = [[-27.63788874555385,153.07222],[-27.600587532565903,153.1055980280545]];
-        var layer_BrisDawnNavS1W8 = new L.imageOverlay(img_BrisDawnNavS1W8,
-                                              img_bounds_BrisDawnNavS1W8);
-        map.addLayer(layer_BrisDawnNavS1W8);
-        //
-        var img_BrisDawnNavS1W9 = 'data/BrisDawnNavS1W9.png';
-        var img_bounds_BrisDawnNavS1W9 = [[-27.473963874228673,152.94707000000002],[-27.44440894108754,152.98908488135285]];
-        var layer_BrisDawnNavS1W9 = new L.imageOverlay(img_BrisDawnNavS1W9,
-                                              img_bounds_BrisDawnNavS1W9);
-        map.addLayer(layer_BrisDawnNavS1W9);
-        //
-        var img_BrisDawnNavS1W10 = 'data/BrisDawnNavS1W10.png';
-        var img_bounds_BrisDawnNavS1W10 = [[-27.49341219017608,153.06549],[-27.46385894453462,153.10753134683523]];
-        var layer_BrisDawnNavS1W10 = new L.imageOverlay(img_BrisDawnNavS1W10,
-                                              img_bounds_BrisDawnNavS1W10);
-        map.addLayer(layer_BrisDawnNavS1W10);
-        //
-        var img_BrisDawnNavS1Bonus = 'data/BrisDawnNavS1Bonus.png';
-        var img_bounds_BrisDawnNavS1Bonus = [[-27.489649999999994,153.01297],[-27.449587652002005,153.04487477069736]];
-        var layer_BrisDawnNavS1Bonus = new L.imageOverlay(img_BrisDawnNavS1Bonus,
-                                              img_bounds_BrisDawnNavS1Bonus);
-        map.addLayer(layer_BrisDawnNavS1Bonus);
-        //
-        var img_BrisDawnNavS2W1 = 'data/BrisDawnNavS2W1.png';
-        var img_bounds_BrisDawnNavS2W1 = [[-27.561899609388366,153.02293],[-27.53232644055914,153.0649987966645]];
-        var layer_BrisDawnNavS2W1 = new L.imageOverlay(img_BrisDawnNavS2W1,
-                                              img_bounds_BrisDawnNavS2W1);
-        map.addLayer(layer_BrisDawnNavS2W1);
-        //
-        var img_BrisDawnNavS2W2 = 'data/BrisDawnNavS2W2.png';
-        var img_bounds_BrisDawnNavS2W2 = [[-27.562070000000002,152.94609],[-27.538479077126002,152.98374980115503]];
-        var layer_BrisDawnNavS2W2 = new L.imageOverlay(img_BrisDawnNavS2W2,
-                                              img_bounds_BrisDawnNavS2W2);
-        map.addLayer(layer_BrisDawnNavS2W2);
-        //
-        var img_BrisDawnNavS2W3p1 = 'data/BrisDawnNavS2W3p1.png';
-        var img_bounds_BrisDawnNavS2W3p1 = [[-27.483259999999998,152.96322],[-27.456551769710998,152.9844898471319]];
-        var layer_BrisDawnNavS2W3p1 = new L.imageOverlay(img_BrisDawnNavS2W3p1,
-                                              img_bounds_BrisDawnNavS2W3p1);
-        map.addLayer(layer_BrisDawnNavS2W3p1);
-        //
-        var img_BrisDawnNavS2W3p2 = 'data/BrisDawnNavS2W3p2.png';
-        var img_bounds_BrisDawnNavS2W3p2 = [[-27.483660866800175,152.96495999999996],[-27.471835656958906,152.98177338484294]];
-        var layer_BrisDawnNavS2W3p2 = new L.imageOverlay(img_BrisDawnNavS2W3p2,
-                                              img_bounds_BrisDawnNavS2W3p2);
-        map.addLayer(layer_BrisDawnNavS2W3p2);
-        //
-        var img_BrisDawnNavS2W4 = 'data/BrisDawnNavS2W4.png';
-        var img_bounds_BrisDawnNavS2W4 = [[-27.49211999999999,152.99514],[-27.468529077129443,153.03276976941544]];
-        var layer_BrisDawnNavS2W4 = new L.imageOverlay(img_BrisDawnNavS2W4,
-                                              img_bounds_BrisDawnNavS2W4);
-        map.addLayer(layer_BrisDawnNavS2W4);
-        //
-        var img_BrisDawnNavS2W5 = 'data/BrisDawnNavS2W5.png';
-        var img_bounds_BrisDawnNavS2W5 = [[-27.521319999999996,152.99809000000005],[-27.49772907712803,153.03572977999494]];
-        var layer_BrisDawnNavS2W5 = new L.imageOverlay(img_BrisDawnNavS2W5,
-                                              img_bounds_BrisDawnNavS2W5);
-        map.addLayer(layer_BrisDawnNavS2W5);
-        //
-        var img_BrisDawnNavS2W6 = 'data/BrisDawnNavS2W6.png';
-        var img_bounds_BrisDawnNavS2W6 = [[-27.516520000000003,153.06422000000003],[-27.492929077128252,153.10185977999492]];
-        var layer_BrisDawnNavS2W6 = new L.imageOverlay(img_BrisDawnNavS2W6,
-                                              img_bounds_BrisDawnNavS2W6);
-        map.addLayer(layer_BrisDawnNavS2W6);
-        //
-        var img_BrisDawnNavS2W7 = 'data/BrisDawnNavS2W7.png';
-        var img_bounds_BrisDawnNavS2W7 = [[-27.473989999999997,153.04931],[-27.440604711073092,153.07589230659877]];
-        var layer_BrisDawnNavS2W7 = new L.imageOverlay(img_BrisDawnNavS2W7,
-                                              img_bounds_BrisDawnNavS2W7);
-        map.addLayer(layer_BrisDawnNavS2W7);
-        //
-        var img_BrisDawnNavS2W8p1 = 'data/BrisDawnNavS2W8p1.png';
-        var img_bounds_BrisDawnNavS2W8p1 = [[-27.468089999999997,153.01052999999996],[-27.458655632059,153.02557590141774]];
-        var layer_BrisDawnNavS2W8p1 = new L.imageOverlay(img_BrisDawnNavS2W8p1,
-                                              img_bounds_BrisDawnNavS2W8p1);
-        map.addLayer(layer_BrisDawnNavS2W8p1);
-        //
-        var img_BrisDawnNavS2W8p2 = 'data/BrisDawnNavS2W8p2.png';
-        var img_bounds_BrisDawnNavS2W8p2 = [[-27.46567,153.00762999999998],[-27.43896176971354,153.02889984713187]];
-        var layer_BrisDawnNavS2W8p2 = new L.imageOverlay(img_BrisDawnNavS2W8p2,
-                                              img_bounds_BrisDawnNavS2W8p2);
-        map.addLayer(layer_BrisDawnNavS2W8p2);
-        //
-        var img_BrisDawnNavS2W9 = 'data/BrisDawnNavS2W9.png';
-        var img_bounds_BrisDawnNavS2W9 = [[-27.503580000000003,153.01426999999998],[-27.47998907712883,153.0518997694154]];
-        var layer_BrisDawnNavS2W9 = new L.imageOverlay(img_BrisDawnNavS2W9,
-                                              img_bounds_BrisDawnNavS2W9);
-        map.addLayer(layer_BrisDawnNavS2W9);
-        //
-        var img_BrisDawnNavS2W10 = 'data/BrisDawnNavS2W10.png';
-        var img_bounds_BrisDawnNavS2W10 = [[-27.453429999999994,152.97016000000002],[-27.429839077131355,153.00777975883602]];
-        var layer_BrisDawnNavS2W10 = new L.imageOverlay(img_BrisDawnNavS2W10,
-                                              img_bounds_BrisDawnNavS2W10);
-        map.addLayer(layer_BrisDawnNavS2W10);
-        //
-        var img_BrisDawnNavS2Bonus = 'data/BrisDawnNavS2Bonus.png';
-        var img_bounds_BrisDawnNavS2Bonus = [[-27.462479999999992,152.90026999999998],[-27.434166890423853,152.9454077042545]];
-        var layer_BrisDawnNavS2Bonus = new L.imageOverlay(img_BrisDawnNavS2Bonus,
-                                              img_bounds_BrisDawnNavS2Bonus);
-        map.addLayer(layer_BrisDawnNavS2Bonus);
-        //
-        var img_BrisDawnNavS3W1 = 'data/BrisDawnNavS3W1.png';
-        var img_bounds_BrisDawnNavS3W1 = [[-27.51598,153.08932000000001],[-27.492389077128298,153.1269597799949]];
-        var layer_BrisDawnNavS3W1 = new L.imageOverlay(img_BrisDawnNavS3W1,
-                                              img_bounds_BrisDawnNavS3W1);
-        map.addLayer(layer_BrisDawnNavS3W1);
-        //
-        var img_BrisDawnNavS3W2 = 'data/BrisDawnNavS3W2.png';
-        var img_bounds_BrisDawnNavS3W2 = [[-27.477299999999996,153.02998999999997],[-27.44391471107231,153.05658231123047]];
-        var layer_BrisDawnNavS3W2 = new L.imageOverlay(img_BrisDawnNavS3W2,
-                                              img_bounds_BrisDawnNavS3W2);
-        map.addLayer(layer_BrisDawnNavS3W2);
-        //
-        var img_BrisDawnNavS3W3 = 'data/BrisDawnNavS3W3.png';
-        var img_bounds_BrisDawnNavS3W3 = [[-27.541735888804432,153.06589249999996],[-27.50443753472041,153.0992387375426]];
-        var layer_BrisDawnNavS3W3 = new L.imageOverlay(img_BrisDawnNavS3W3,
-                                              img_bounds_BrisDawnNavS3W3);
-        map.addLayer(layer_BrisDawnNavS3W3);
-        //
-        var img_BrisDawnNavS3W4 = 'data/BrisDawnNavS3W4.png';
-        var img_bounds_BrisDawnNavS3W4 = [[-27.48573759999359,152.9627375],[-27.456178940392835,153.00476216663876]];
-        var layer_BrisDawnNavS3W4 = new L.imageOverlay(img_BrisDawnNavS3W4,
-                                              img_bounds_BrisDawnNavS3W4);
-        map.addLayer(layer_BrisDawnNavS3W4);
-        //
-        var img_BrisDawnNavS3W5 = 'data/BrisDawnNavS3W5.png';
-        var img_bounds_BrisDawnNavS3W5 = [[-27.527341696096517,153.02013],[-27.490047535675895,153.05346812567453]];
-        var layer_BrisDawnNavS3W5 = new L.imageOverlay(img_BrisDawnNavS3W5,
-                                              img_bounds_BrisDawnNavS3W5);
-        map.addLayer(layer_BrisDawnNavS3W5);
-        //
-        var img_BrisDawnNavS3W6 = 'data/BrisDawnNavS3W6.png';
-        var img_bounds_BrisDawnNavS3W6 = [[-27.490847752264795,153.05089999999998],[-27.461288944045936,153.09292682691594]];
-        var layer_BrisDawnNavS3W6 = new L.imageOverlay(img_BrisDawnNavS3W6,
-                                              img_bounds_BrisDawnNavS3W6);
-        map.addLayer(layer_BrisDawnNavS3W6);
-        //
-        var img_BrisDawnNavS3W7 = 'data/BrisDawnNavS3W7.png';
-        var img_bounds_BrisDawnNavS3W7 = [[-27.530181715643664,152.96424000000002],[-27.494716650751148,153.01468103174204]];
-        var layer_BrisDawnNavS3W7 = new L.imageOverlay(img_BrisDawnNavS3W7,
-                                              img_bounds_BrisDawnNavS3W7);
-        map.addLayer(layer_BrisDawnNavS3W7);
-        //
-        var img_BrisDawnNavS3W8 = 'data/BrisDawnNavS3W8.png';
-        var img_bounds_BrisDawnNavS3W8 = [[-27.449595405157762,153.00366249999996],[-27.41231252602135,153.0369625976673]];
-        var layer_BrisDawnNavS3W8 = new L.imageOverlay(img_BrisDawnNavS3W8,
-                                              img_bounds_BrisDawnNavS3W8);
-        map.addLayer(layer_BrisDawnNavS3W8);
-        //
-        var img_BrisDawnNavS3W9 = 'data/BrisDawnNavS3W9.png';
-        var img_bounds_BrisDawnNavS3W9 = [[-27.5117412066438,152.92799000000005],[-27.482181442480343,152.97002616027328]];
-        var layer_BrisDawnNavS3W9 = new L.imageOverlay(img_BrisDawnNavS3W9,
-                                              img_bounds_BrisDawnNavS3W9);
-        map.addLayer(layer_BrisDawnNavS3W9);
-        //
-        var img_BrisDawnNavS3W10 = 'data/BrisDawnNavS3W10.png';
-        var img_bounds_BrisDawnNavS3W10 = [[-27.56200210121245,153.03553749999998],[-27.53242894301972,153.07760632078907]];
-        var layer_BrisDawnNavS3W10 = new L.imageOverlay(img_BrisDawnNavS3W10,
-                                              img_bounds_BrisDawnNavS3W10);
-        map.addLayer(layer_BrisDawnNavS3W10);
-        //
-        var img_BrisDawnNavS3Bonus = 'data/BrisDawnNavS3Bonus.png';
-        var img_bounds_BrisDawnNavS3Bonus = [[-27.648000000000003,153.06464],[-27.607937651949985,153.0965947938568]];
-        var layer_BrisDawnNavS3Bonus = new L.imageOverlay(img_BrisDawnNavS3Bonus,
-                                              img_bounds_BrisDawnNavS3Bonus);
-        map.addLayer(layer_BrisDawnNavS3Bonus);
-        //
-        var img_BrisDawnNavH1 = 'data/BrisDawnNavH1.png';
-        var img_bounds_BrisDawnNavH1 = [[-27.667772446699633,152.9971075],[-27.638178940432383,153.03921881184056]];
-        var layer_BrisDawnNavH1 = new L.imageOverlay(img_BrisDawnNavH1,
-                                              img_bounds_BrisDawnNavH1);
-        map.addLayer(layer_BrisDawnNavH1);
-        //
-        var img_BrisDawnNavH2 = 'data/BrisDawnNavH2.png';
-        var img_bounds_BrisDawnNavH2 = [[-27.481965638526127,153.03249000000002],[-27.452122072717035,153.05914061483804]];
-        var layer_BrisDawnNavH2 = new L.imageOverlay(img_BrisDawnNavH2,
-                                              img_bounds_BrisDawnNavH2);
-        map.addLayer(layer_BrisDawnNavH2);
-        //
-        var img_BrisDawnNavS4W1 = 'data/BrisDawnNavS4W1.png';
-        var img_bounds_BrisDawnNavS4W1 = [[-27.511562030463715,152.99767],[-27.482001441956765,153.0397072639678]];
-        var layer_BrisDawnNavS4W1 = new L.imageOverlay(img_BrisDawnNavS4W1,
-                                              img_bounds_BrisDawnNavS4W1);
-        map.addLayer(layer_BrisDawnNavS4W1);
-        //
-        var img_BrisDawnNavS4W2 = 'data/BrisDawnNavS4W2.png';
-        var img_bounds_BrisDawnNavS4W2 = [[-27.496029999999994,153.10404999999994],[-27.472439077129252,153.14167976941536]];
-        var layer_BrisDawnNavS4W2 = new L.imageOverlay(img_BrisDawnNavS4W2,
-                                              img_bounds_BrisDawnNavS4W2);
-        map.addLayer(layer_BrisDawnNavS4W2);
-        //
-        var img_BrisDawnNavS4W3 = 'data/BrisDawnNavS4W3.png';
-        var img_bounds_BrisDawnNavS4W3 = [[-27.488702103936244,152.97461880386174],[-27.44841894308247,153.02002035164094]];
-        var layer_BrisDawnNavS4W3 = new L.imageOverlay(img_BrisDawnNavS4W3,
-                                              img_bounds_BrisDawnNavS4W3);
-        map.addLayer(layer_BrisDawnNavS4W3);
-        //
-        var img_BrisDawnNavS4W4 = 'data/BrisDawnNavS4W4.png';
-        var img_bounds_BrisDawnNavS4W4 = [[-27.554758829333693,153.0411094752152],[-27.513975836654314,153.08332460000713]];
-        var layer_BrisDawnNavS4W4 = new L.imageOverlay(img_BrisDawnNavS4W4,
-                                              img_bounds_BrisDawnNavS4W4);
-        map.addLayer(layer_BrisDawnNavS4W4);
-        //
-        var img_BrisDawnNavS4W5 = 'data/BrisDawnNavS4W5.png';
-        var img_bounds_BrisDawnNavS4W5 = [[-27.448920331804675,153.03401],[-27.411625031424542,153.06730399101596]];
-        var layer_BrisDawnNavS4W5 = new L.imageOverlay(img_BrisDawnNavS4W5,
-                                              img_bounds_BrisDawnNavS4W5);
-        map.addLayer(layer_BrisDawnNavS4W5);
-        //
-        var img_BrisDawnNavS4W6 = 'data/BrisDawnNavS4W6.png';
-        var img_bounds_BrisDawnNavS4W6 = [[-27.520207927332322,153.03664999999995],[-27.482905029641014,153.069972316356]];
-        var layer_BrisDawnNavS4W6 = new L.imageOverlay(img_BrisDawnNavS4W6,
-                                              img_bounds_BrisDawnNavS4W6);
-        map.addLayer(layer_BrisDawnNavS4W6);
-        //
-        var img_BrisDawnNavS4W7 = 'data/BrisDawnNavS4W7.png';
-        var img_bounds_BrisDawnNavS4W7 = [[-27.50748231975651,152.96215000000004],[-27.47792644187065,153.00420046279083]];
-        var layer_BrisDawnNavS4W7 = new L.imageOverlay(img_BrisDawnNavS4W7,
-                                              img_bounds_BrisDawnNavS4W7);
-        map.addLayer(layer_BrisDawnNavS4W7);
-        //
-        var overlaysTree = {
-            label: 'Bris Dawn Nav',
-            selectAllCheckbox: true,
-                    children: [
-                        {
-                            label: 'Preview Weeks',
-                            selectAllCheckbox: true,
-                            collapsed: true,
-                            children: [
-                                { label: 'Bris Dawn Nav P1', layer: layer_BrisDawnNavP1 },
-                                { label: 'Bris Dawn Nav P2', layer: layer_BrisDawnNavP2 },
-                            ]
-                        },
-                        {
-                            label: 'Series 1',
-                            selectAllCheckbox: true,
-                            collapsed: true,
-                            children: [
-                                { label: 'Bris Dawn Nav S1 W1', layer: layer_BrisDawnNavS1W1 },
-                                { label: 'Bris Dawn Nav S1 W2', layer: layer_BrisDawnNavS1W2 },
-                                { label: 'Bris Dawn Nav S1 W3', layer: layer_BrisDawnNavS1W3 },
-                                { label: 'Bris Dawn Nav S1 W4', layer: layer_BrisDawnNavS1W4 },
-                                { label: 'Bris Dawn Nav S1 W5', layer: layer_BrisDawnNavS1W5 },
-                                { label: 'Bris Dawn Nav S1 W6', layer: layer_BrisDawnNavS1W6 },
-                                { label: 'Bris Dawn Nav S1 W7', layer: layer_BrisDawnNavS1W7 },
-                                { label: 'Bris Dawn Nav S1 W8', layer: layer_BrisDawnNavS1W8 },
-                                { label: 'Bris Dawn Nav S1 W9', layer: layer_BrisDawnNavS1W9 },
-                                { label: 'Bris Dawn Nav S1 W10', layer: layer_BrisDawnNavS1W10 },
-                                { label: 'Bris Dawn Nav S1 Bonus', layer: layer_BrisDawnNavS1Bonus },
-                            ]
-                        },
-                        {
-                            label: 'Series 2',
-                            selectAllCheckbox: true,
-                            collapsed: true,
-                            children: [
-                                { label: 'Bris Dawn Nav S2 W1', layer: layer_BrisDawnNavS2W1 },
-                                { label: 'Bris Dawn Nav S2 W2', layer: layer_BrisDawnNavS2W2 },
-                                { label: 'Bris Dawn Nav S2 W3 p1', layer: layer_BrisDawnNavS2W3p1 },
-                                { label: 'Bris Dawn Nav S2 W3 p2', layer: layer_BrisDawnNavS2W3p2 },
-                                { label: 'Bris Dawn Nav S2 W4', layer: layer_BrisDawnNavS2W4 },
-                                { label: 'Bris Dawn Nav S2 W5', layer: layer_BrisDawnNavS2W5 },
-                                { label: 'Bris Dawn Nav S2 W6', layer: layer_BrisDawnNavS2W6 },
-                                { label: 'Bris Dawn Nav S2 W7', layer: layer_BrisDawnNavS2W7 },
-                                { label: 'Bris Dawn Nav S2 W8 p1', layer: layer_BrisDawnNavS2W8p1 },
-                                { label: 'Bris Dawn Nav S2 W8 p2', layer: layer_BrisDawnNavS2W8p2 },
-                                { label: 'Bris Dawn Nav S2 W9', layer: layer_BrisDawnNavS2W9 },
-                                { label: 'Bris Dawn Nav S2 W10', layer: layer_BrisDawnNavS2W10 },
-                                { label: 'Bris Dawn Nav S2 Bonus', layer: layer_BrisDawnNavS2Bonus },
-                            ]
-                        },
-                        {
-                            label: 'Series 3',
-                            selectAllCheckbox: true,
-                            collapsed: true,
-                            children: [
-                                { label: 'Bris Dawn Nav S3 W1', layer: layer_BrisDawnNavS3W1 },
-                                { label: 'Bris Dawn Nav S3 W2', layer: layer_BrisDawnNavS3W2 },
-                                { label: 'Bris Dawn Nav S3 W3', layer: layer_BrisDawnNavS3W3 },
-                                { label: 'Bris Dawn Nav S3 W4', layer: layer_BrisDawnNavS3W4 },
-                                { label: 'Bris Dawn Nav S3 W5', layer: layer_BrisDawnNavS3W5 },
-                                { label: 'Bris Dawn Nav S3 W6', layer: layer_BrisDawnNavS3W6 },
-                                { label: 'Bris Dawn Nav S3 W7', layer: layer_BrisDawnNavS3W7 },
-                                { label: 'Bris Dawn Nav S3 W8', layer: layer_BrisDawnNavS3W8 },
-                                { label: 'Bris Dawn Nav S3 W9', layer: layer_BrisDawnNavS3W9 },
-                                { label: 'Bris Dawn Nav S3 W10', layer: layer_BrisDawnNavS3W10 },
-                                { label: 'Bris Dawn Nav S3 Bonus', layer: layer_BrisDawnNavS3Bonus },
-                            ]
-                        },
-                        {
-                            label: 'Holiday Editions',
-                            selectAllCheckbox: true,
-                            collapsed: true,
-                            children: [
-                                { label: 'Bris Dawn Nav H1', layer: layer_BrisDawnNavH1 },
-                                { label: 'Bris Dawn Nav H2', layer: layer_BrisDawnNavH2 },
-                            ]
-                        },
-                        {
-                            label: 'Series 4',
-                            selectAllCheckbox: true,
-                            collapsed: false,
-                            children: [
-                                { label: 'Bris Dawn Nav S4 W1', layer: layer_BrisDawnNavS4W1 },
-                                { label: 'Bris Dawn Nav S4 W2', layer: layer_BrisDawnNavS4W2 },
-                                { label: 'Bris Dawn Nav S4 W3', layer: layer_BrisDawnNavS4W3 },
-                                { label: 'Bris Dawn Nav S4 W4', layer: layer_BrisDawnNavS4W4 },
-                                { label: 'Bris Dawn Nav S4 W5', layer: layer_BrisDawnNavS4W5 },
-                                { label: 'Bris Dawn Nav S4 W6', layer: layer_BrisDawnNavS4W6 },
-                                { label: 'Bris Dawn Nav S4 W7', layer: layer_BrisDawnNavS4W7 },
-                            ]
-                        },
-                    ]
-        };
-        var baseTree = {}
-        /*var baseTree = {
-            label: 'Base Layers',
-                    children: [
-                        { label: 'Google Satellite', layer: layer_GoogleSatellite },
-                        { label: 'OpenStreetMap', layer: layer_OpenStreetMap },
-                    ]
-        };*/
-        var lay = L.control.layers.tree(baseTree, overlaysTree,
-            {
-                selectorBack: true,
-                collapsed: false,
-            });
+        layer_OpenStreetMap_0;
+        map.addLayer(layer_OpenStreetMap_0);
+        map.createPane('pane_Caba_1');
+        map.getPane('pane_Caba_1').style.zIndex = 401;
+        var img_Caba_1 = 'data/Caba_1.png';
+        var img_bounds_Caba_1 = [[-28.3651864545886,153.5510925844645],[-28.32516650925786,153.5832444158079]];
+        var layer_Caba_1 = new L.imageOverlay(img_Caba_1,
+                                              img_bounds_Caba_1,
+                                              {pane: 'pane_Caba_1'});
+        bounds_group.addLayer(layer_Caba_1);
+        map.createPane('pane_Demo_2');
+        map.getPane('pane_Demo_2').style.zIndex = 402;
+        var img_Demo_2 = 'data/Demo_2.png';
+        var img_bounds_Demo_2 = [[-27.559064467754354,153.024265318821],[-27.521499153046417,153.06838440610042]];
+        var layer_Demo_2 = new L.imageOverlay(img_Demo_2,
+                                              img_bounds_Demo_2,
+                                              {pane: 'pane_Demo_2'});
+        bounds_group.addLayer(layer_Demo_2);
+        map.createPane('pane_Indigenous_3');
+        map.getPane('pane_Indigenous_3').style.zIndex = 403;
+        var img_Indigenous_3 = 'data/Indigenous_3.png';
+        var img_bounds_Indigenous_3 = [[-27.494079580886105,152.9876301806316],[-27.44505733554272,153.05562883086742]];
+        var layer_Indigenous_3 = new L.imageOverlay(img_Indigenous_3,
+                                              img_bounds_Indigenous_3,
+                                              {pane: 'pane_Indigenous_3'});
+        bounds_group.addLayer(layer_Indigenous_3);
+        map.createPane('pane_SummerLeg1_4');
+        map.getPane('pane_SummerLeg1_4').style.zIndex = 404;
+        var img_SummerLeg1_4 = 'data/SummerLeg1_4.png';
+        var img_bounds_SummerLeg1_4 = [[-27.51498047393789,152.98114903961442],[-27.477632623576213,153.02521412924978]];
+        var layer_SummerLeg1_4 = new L.imageOverlay(img_SummerLeg1_4,
+                                              img_bounds_SummerLeg1_4,
+                                              {pane: 'pane_SummerLeg1_4'});
+        bounds_group.addLayer(layer_SummerLeg1_4);
+        map.createPane('pane_SummerLeg2_5');
+        map.getPane('pane_SummerLeg2_5').style.zIndex = 405;
+        var img_SummerLeg2_5 = 'data/SummerLeg2_5.png';
+        var img_bounds_SummerLeg2_5 = [[-27.487605213545148,152.98396524557106],[-27.453714655866083,153.02694839189573]];
+        var layer_SummerLeg2_5 = new L.imageOverlay(img_SummerLeg2_5,
+                                              img_bounds_SummerLeg2_5,
+                                              {pane: 'pane_SummerLeg2_5'});
+        bounds_group.addLayer(layer_SummerLeg2_5);
+        map.createPane('pane_SummerLeg3_6');
+        map.getPane('pane_SummerLeg3_6').style.zIndex = 406;
+        var img_SummerLeg3_6 = 'data/SummerLeg3_6.png';
+        var img_bounds_SummerLeg3_6 = [[-27.49924107764943,152.99760126950838],[-27.463632826299307,153.04118676114936]];
+        var layer_SummerLeg3_6 = new L.imageOverlay(img_SummerLeg3_6,
+                                              img_bounds_SummerLeg3_6,
+                                              {pane: 'pane_SummerLeg3_6'});
+        bounds_group.addLayer(layer_SummerLeg3_6);
+        map.createPane('pane_SummerLeg4_7');
+        map.getPane('pane_SummerLeg4_7').style.zIndex = 407;
+        var img_SummerLeg4_7 = 'data/SummerLeg4_7.png';
+        var img_bounds_SummerLeg4_7 = [[-27.47525319287676,153.00947466391915],[-27.432254113516088,153.05294898538713]];
+        var layer_SummerLeg4_7 = new L.imageOverlay(img_SummerLeg4_7,
+                                              img_bounds_SummerLeg4_7,
+                                              {pane: 'pane_SummerLeg4_7'});
+        bounds_group.addLayer(layer_SummerLeg4_7);
+        map.createPane('pane_SummerLeg5_8');
+        map.getPane('pane_SummerLeg5_8').style.zIndex = 408;
+        var img_SummerLeg5_8 = 'data/SummerLeg5_8.png';
+        var img_bounds_SummerLeg5_8 = [[-27.48349546870219,153.0282315851925],[-27.443299125164803,153.06421763978227]];
+        var layer_SummerLeg5_8 = new L.imageOverlay(img_SummerLeg5_8,
+                                              img_bounds_SummerLeg5_8,
+                                              {pane: 'pane_SummerLeg5_8'});
+        bounds_group.addLayer(layer_SummerLeg5_8);
+        map.createPane('pane_SummerLeg6_9');
+        map.getPane('pane_SummerLeg6_9').style.zIndex = 409;
+        var img_SummerLeg6_9 = 'data/SummerLeg6_9.png';
+        var img_bounds_SummerLeg6_9 = [[-27.515631245265247,153.0163148348312],[-27.47264152135845,153.05980059401384]];
+        var layer_SummerLeg6_9 = new L.imageOverlay(img_SummerLeg6_9,
+                                              img_bounds_SummerLeg6_9,
+                                              {pane: 'pane_SummerLeg6_9'});
+        bounds_group.addLayer(layer_SummerLeg6_9);
+        map.createPane('pane_S14W1_10');
+        map.getPane('pane_S14W1_10').style.zIndex = 410;
+        var img_S14W1_10 = 'data/S14W1_10.png';
+        var img_bounds_S14W1_10 = [[-27.494679470281543,153.00271845368087],[-27.45739854877241,153.04675705885603]];
+        var layer_S14W1_10 = new L.imageOverlay(img_S14W1_10,
+                                              img_bounds_S14W1_10,
+                                              {pane: 'pane_S14W1_10'});
+        bounds_group.addLayer(layer_S14W1_10);
+        map.addLayer(layer_S14W1_10);
+        map.createPane('pane_S13W10_11');
+        map.getPane('pane_S13W10_11').style.zIndex = 411;
+        var img_S13W10_11 = 'data/S13W10_11.png';
+        var img_bounds_S13W10_11 = [[-27.494784637317565,153.05682037600994],[-27.46128510402644,153.09964026063622]];
+        var layer_S13W10_11 = new L.imageOverlay(img_S13W10_11,
+                                              img_bounds_S13W10_11,
+                                              {pane: 'pane_S13W10_11'});
+        bounds_group.addLayer(layer_S13W10_11);
+        map.createPane('pane_S13W9_12');
+        map.getPane('pane_S13W9_12').style.zIndex = 412;
+        var img_S13W9_12 = 'data/S13W9_12.png';
+        var img_bounds_S13W9_12 = [[-27.460316687819933,152.98808856606024],[-27.427093236501555,153.03079557717658]];
+        var layer_S13W9_12 = new L.imageOverlay(img_S13W9_12,
+                                              img_bounds_S13W9_12,
+                                              {pane: 'pane_S13W9_12'});
+        bounds_group.addLayer(layer_S13W9_12);
+        map.createPane('pane_S13W8_13');
+        map.getPane('pane_S13W8_13').style.zIndex = 413;
+        var img_S13W8_13 = 'data/S13W8_13.png';
+        var img_bounds_S13W8_13 = [[-27.50359854319751,152.99093671999168],[-27.462203299348854,153.03516329105315]];
+        var layer_S13W8_13 = new L.imageOverlay(img_S13W8_13,
+                                              img_bounds_S13W8_13,
+                                              {pane: 'pane_S13W8_13'});
+        bounds_group.addLayer(layer_S13W8_13);
+        map.createPane('pane_S13W7_14');
+        map.getPane('pane_S13W7_14').style.zIndex = 414;
+        var img_S13W7_14 = 'data/S13W7_14.png';
+        var img_bounds_S13W7_14 = [[-27.46061343312889,152.916957965082],[-27.430240908020235,152.95836377482195]];
+        var layer_S13W7_14 = new L.imageOverlay(img_S13W7_14,
+                                              img_bounds_S13W7_14,
+                                              {pane: 'pane_S13W7_14'});
+        bounds_group.addLayer(layer_S13W7_14);
+        map.createPane('pane_S13W6_15');
+        map.getPane('pane_S13W6_15').style.zIndex = 415;
+        var img_S13W6_15 = 'data/S13W6_15.png';
+        var img_bounds_S13W6_15 = [[-27.51945398139523,153.07312411058447],[-27.49243864826034,153.11276864689106]];
+        var layer_S13W6_15 = new L.imageOverlay(img_S13W6_15,
+                                              img_bounds_S13W6_15,
+                                              {pane: 'pane_S13W6_15'});
+        bounds_group.addLayer(layer_S13W6_15);
+        map.createPane('pane_S13W5_16');
+        map.getPane('pane_S13W5_16').style.zIndex = 416;
+        var img_S13W5_16 = 'data/S13W5_16.png';
+        var img_bounds_S13W5_16 = [[-27.43935740703476,153.0327696463618],[-27.39900846201812,153.06902809793678]];
+        var layer_S13W5_16 = new L.imageOverlay(img_S13W5_16,
+                                              img_bounds_S13W5_16,
+                                              {pane: 'pane_S13W5_16'});
+        bounds_group.addLayer(layer_S13W5_16);
+        map.createPane('pane_S13W4_17');
+        map.getPane('pane_S13W4_17').style.zIndex = 417;
+        var img_S13W4_17 = 'data/S13W4_17.png';
+        var img_bounds_S13W4_17 = [[-27.56619759278303,153.02870000862137],[-27.524162004798868,153.0680736075744]];
+        var layer_S13W4_17 = new L.imageOverlay(img_S13W4_17,
+                                              img_bounds_S13W4_17,
+                                              {pane: 'pane_S13W4_17'});
+        bounds_group.addLayer(layer_S13W4_17);
+        map.createPane('pane_S13W3_18');
+        map.getPane('pane_S13W3_18').style.zIndex = 418;
+        var img_S13W3_18 = 'data/S13W3_18.png';
+        var img_bounds_S13W3_18 = [[-27.484986234673286,152.9592835028936],[-27.444773707812157,153.0036495333]];
+        var layer_S13W3_18 = new L.imageOverlay(img_S13W3_18,
+                                              img_bounds_S13W3_18,
+                                              {pane: 'pane_S13W3_18'});
+        bounds_group.addLayer(layer_S13W3_18);
+        map.createPane('pane_S13W2_19');
+        map.getPane('pane_S13W2_19').style.zIndex = 419;
+        var img_S13W2_19 = 'data/S13W2_19.png';
+        var img_bounds_S13W2_19 = [[-27.54375058787521,152.9561800048864],[-27.501122460844105,152.9980135722338]];
+        var layer_S13W2_19 = new L.imageOverlay(img_S13W2_19,
+                                              img_bounds_S13W2_19,
+                                              {pane: 'pane_S13W2_19'});
+        bounds_group.addLayer(layer_S13W2_19);
+        map.createPane('pane_S13W1_20');
+        map.getPane('pane_S13W1_20').style.zIndex = 420;
+        var img_S13W1_20 = 'data/S13W1_20.png';
+        var img_bounds_S13W1_20 = [[-27.48115382734799,153.02281887940632],[-27.441553564096708,153.05789112860478]];
+        var layer_S13W1_20 = new L.imageOverlay(img_S13W1_20,
+                                              img_bounds_S13W1_20,
+                                              {pane: 'pane_S13W1_20'});
+        bounds_group.addLayer(layer_S13W1_20);
+        map.createPane('pane_S13B_21');
+        map.getPane('pane_S13B_21').style.zIndex = 421;
+        var img_S13B_21 = 'data/S13B_21.png';
+        var img_bounds_S13B_21 = [[-27.654389166304277,153.16211726552208],[-27.60417083607463,153.21509102563581]];
+        var layer_S13B_21 = new L.imageOverlay(img_S13B_21,
+                                              img_bounds_S13B_21,
+                                              {pane: 'pane_S13B_21'});
+        bounds_group.addLayer(layer_S13B_21);
+        map.createPane('pane_S12W10_22');
+        map.getPane('pane_S12W10_22').style.zIndex = 422;
+        var img_S12W10_22 = 'data/S12W10_22.png';
+        var img_bounds_S12W10_22 = [[-27.532007801632375,152.99471802820614],[-27.493436385074705,153.0389945417466]];
+        var layer_S12W10_22 = new L.imageOverlay(img_S12W10_22,
+                                              img_bounds_S12W10_22,
+                                              {pane: 'pane_S12W10_22'});
+        bounds_group.addLayer(layer_S12W10_22);
+        map.createPane('pane_S12W9_23');
+        map.getPane('pane_S12W9_23').style.zIndex = 423;
+        var img_S12W9_23 = 'data/S12W9_23.png';
+        var img_bounds_S12W9_23 = [[-27.460319843743562,152.96482657557087],[-27.426951776812547,153.00759555299948]];
+        var layer_S12W9_23 = new L.imageOverlay(img_S12W9_23,
+                                              img_bounds_S12W9_23,
+                                              {pane: 'pane_S12W9_23'});
+        bounds_group.addLayer(layer_S12W9_23);
+        map.createPane('pane_S12W8_24');
+        map.getPane('pane_S12W8_24').style.zIndex = 424;
+        var img_S12W8_24 = 'data/S12W8_24.png';
+        var img_bounds_S12W8_24 = [[-27.487655948058222,153.06107961834945],[-27.445731309806476,153.10020398469524]];
+        var layer_S12W8_24 = new L.imageOverlay(img_S12W8_24,
+                                              img_bounds_S12W8_24,
+                                              {pane: 'pane_S12W8_24'});
+        bounds_group.addLayer(layer_S12W8_24);
+        map.createPane('pane_S12W7_25');
+        map.getPane('pane_S12W7_25').style.zIndex = 425;
+        var img_S12W7_25 = 'data/S12W7_25.png';
+        var img_bounds_S12W7_25 = [[-27.433981735452992,152.98919167193455],[-27.404729893131282,153.03003269754896]];
+        var layer_S12W7_25 = new L.imageOverlay(img_S12W7_25,
+                                              img_bounds_S12W7_25,
+                                              {pane: 'pane_S12W7_25'});
+        bounds_group.addLayer(layer_S12W7_25);
+        map.createPane('pane_S12W6_26');
+        map.getPane('pane_S12W6_26').style.zIndex = 426;
+        var img_S12W6_26 = 'data/S12W6_26.png';
+        var img_bounds_S12W6_26 = [[-27.53673123123925,153.05128290092637],[-27.49434250556281,153.09365176309498]];
+        var layer_S12W6_26 = new L.imageOverlay(img_S12W6_26,
+                                              img_bounds_S12W6_26,
+                                              {pane: 'pane_S12W6_26'});
+        bounds_group.addLayer(layer_S12W6_26);
+        map.createPane('pane_S12W5_27');
+        map.getPane('pane_S12W5_27').style.zIndex = 427;
+        var img_S12W5_27 = 'data/S12W5_27.png';
+        var img_bounds_S12W5_27 = [[-27.49050572227235,152.9337925665794],[-27.448004758369258,152.97601548679341]];
+        var layer_S12W5_27 = new L.imageOverlay(img_S12W5_27,
+                                              img_bounds_S12W5_27,
+                                              {pane: 'pane_S12W5_27'});
+        bounds_group.addLayer(layer_S12W5_27);
+        map.createPane('pane_S12W4_28');
+        map.getPane('pane_S12W4_28').style.zIndex = 428;
+        var img_S12W4_28 = 'data/S12W4_28.png';
+        var img_bounds_S12W4_28 = [[-27.55209907234419,153.02832683595196],[-27.513442331714558,153.06199753244078]];
+        var layer_S12W4_28 = new L.imageOverlay(img_S12W4_28,
+                                              img_bounds_S12W4_28,
+                                              {pane: 'pane_S12W4_28'});
+        bounds_group.addLayer(layer_S12W4_28);
+        map.createPane('pane_S12W3_29');
+        map.getPane('pane_S12W3_29').style.zIndex = 429;
+        var img_S12W3_29 = 'data/S12W3_29.png';
+        var img_bounds_S12W3_29 = [[-27.460449315715373,153.00976977245273],[-27.419251616875176,153.05402527441646]];
+        var layer_S12W3_29 = new L.imageOverlay(img_S12W3_29,
+                                              img_bounds_S12W3_29,
+                                              {pane: 'pane_S12W3_29'});
+        bounds_group.addLayer(layer_S12W3_29);
+        map.createPane('pane_S12W2_30');
+        map.getPane('pane_S12W2_30').style.zIndex = 430;
+        var img_S12W2_30 = 'data/S12W2_30.png';
+        var img_bounds_S12W2_30 = [[-27.519244749917647,153.03725763546274],[-27.481386939795257,153.0697923117379]];
+        var layer_S12W2_30 = new L.imageOverlay(img_S12W2_30,
+                                              img_bounds_S12W2_30,
+                                              {pane: 'pane_S12W2_30'});
+        bounds_group.addLayer(layer_S12W2_30);
+        map.createPane('pane_S12W1_31');
+        map.getPane('pane_S12W1_31').style.zIndex = 431;
+        var img_S12W1_31 = 'data/S12W1_31.png';
+        var img_bounds_S12W1_31 = [[-27.47119908256405,152.98596777812298],[-27.442952560291506,153.02628157838174]];
+        var layer_S12W1_31 = new L.imageOverlay(img_S12W1_31,
+                                              img_bounds_S12W1_31,
+                                              {pane: 'pane_S12W1_31'});
+        bounds_group.addLayer(layer_S12W1_31);
+        map.createPane('pane_S11W10_32');
+        map.getPane('pane_S11W10_32').style.zIndex = 432;
+        var img_S11W10_32 = 'data/S11W10_32.png';
+        var img_bounds_S11W10_32 = [[-27.53147285434251,152.99511821736854],[-27.491372150110173,153.0394977080834]];
+        var layer_S11W10_32 = new L.imageOverlay(img_S11W10_32,
+                                              img_bounds_S11W10_32,
+                                              {pane: 'pane_S11W10_32'});
+        bounds_group.addLayer(layer_S11W10_32);
+        map.createPane('pane_S11W9_33');
+        map.getPane('pane_S11W9_33').style.zIndex = 433;
+        var img_S11W9_33 = 'data/S11W9_33.png';
+        var img_bounds_S11W9_33 = [[-27.497847218455593,152.94379770690173],[-27.454800488636803,152.98723708572032]];
+        var layer_S11W9_33 = new L.imageOverlay(img_S11W9_33,
+                                              img_bounds_S11W9_33,
+                                              {pane: 'pane_S11W9_33'});
+        bounds_group.addLayer(layer_S11W9_33);
+        map.createPane('pane_S11W8_34');
+        map.getPane('pane_S11W8_34').style.zIndex = 434;
+        var img_S11W8_34 = 'data/S11W8_34.png';
+        var img_bounds_S11W8_34 = [[-27.557082212443728,153.05636924413668],[-27.527848248539904,153.09724303949585]];
+        var layer_S11W8_34 = new L.imageOverlay(img_S11W8_34,
+                                              img_bounds_S11W8_34,
+                                              {pane: 'pane_S11W8_34'});
+        bounds_group.addLayer(layer_S11W8_34);
+        map.createPane('pane_S11W7_35');
+        map.getPane('pane_S11W7_35').style.zIndex = 435;
+        var img_S11W7_35 = 'data/S11W7_35.png';
+        var img_bounds_S11W7_35 = [[-27.46581359419462,152.9214854008646],[-27.435440042222265,152.96289261049222]];
+        var layer_S11W7_35 = new L.imageOverlay(img_S11W7_35,
+                                              img_bounds_S11W7_35,
+                                              {pane: 'pane_S11W7_35'});
+        bounds_group.addLayer(layer_S11W7_35);
+        map.createPane('pane_S11W6_36');
+        map.getPane('pane_S11W6_36').style.zIndex = 436;
+        var img_S11W6_36 = 'data/S11W6_36.png';
+        var img_bounds_S11W6_36 = [[-27.495289349102876,153.04987519464495],[-27.46625314773597,153.0906292082361]];
+        var layer_S11W6_36 = new L.imageOverlay(img_S11W6_36,
+                                              img_bounds_S11W6_36,
+                                              {pane: 'pane_S11W6_36'});
+        bounds_group.addLayer(layer_S11W6_36);
+        map.createPane('pane_S11W5_37');
+        map.getPane('pane_S11W5_37').style.zIndex = 437;
+        var img_S11W5_37 = 'data/S11W5_37.png';
+        var img_bounds_S11W5_37 = [[-27.481247854451972,152.99421416145708],[-27.44339511713304,153.02672461843036]];
+        var layer_S11W5_37 = new L.imageOverlay(img_S11W5_37,
+                                              img_bounds_S11W5_37,
+                                              {pane: 'pane_S11W5_37'});
+        bounds_group.addLayer(layer_S11W5_37);
+        map.createPane('pane_S11W4_38');
+        map.getPane('pane_S11W4_38').style.zIndex = 438;
+        var img_S11W4_38 = 'data/S11W4_38.png';
+        var img_bounds_S11W4_38 = [[-27.54018505522018,153.06012701692347],[-27.49795471097245,153.09997371050812]];
+        var layer_S11W4_38 = new L.imageOverlay(img_S11W4_38,
+                                              img_bounds_S11W4_38,
+                                              {pane: 'pane_S11W4_38'});
+        bounds_group.addLayer(layer_S11W4_38);
+        map.createPane('pane_S11W3_39');
+        map.getPane('pane_S11W3_39').style.zIndex = 439;
+        var img_S11W3_39 = 'data/S11W3_39.png';
+        var img_bounds_S11W3_39 = [[-27.457208441973528,152.97824771600278],[-27.4193787635777,153.01073556579573]];
+        var layer_S11W3_39 = new L.imageOverlay(img_S11W3_39,
+                                              img_bounds_S11W3_39,
+                                              {pane: 'pane_S11W3_39'});
+        bounds_group.addLayer(layer_S11W3_39);
+        map.createPane('pane_S11W2_40');
+        map.getPane('pane_S11W2_40').style.zIndex = 440;
+        var img_S11W2_40 = 'data/S11W2_40.png';
+        var img_bounds_S11W2_40 = [[-27.54674969483962,153.01517163606005],[-27.516608171224174,153.0564973601391]];
+        var layer_S11W2_40 = new L.imageOverlay(img_S11W2_40,
+                                              img_bounds_S11W2_40,
+                                              {pane: 'pane_S11W2_40'});
+        bounds_group.addLayer(layer_S11W2_40);
+        map.createPane('pane_S11W1_41');
+        map.getPane('pane_S11W1_41').style.zIndex = 441;
+        var img_S11W1_41 = 'data/S11W1_41.png';
+        var img_bounds_S11W1_41 = [[-27.50995923374562,152.95559574490602],[-27.479948940545473,152.9968495639332]];
+        var layer_S11W1_41 = new L.imageOverlay(img_S11W1_41,
+                                              img_bounds_S11W1_41,
+                                              {pane: 'pane_S11W1_41'});
+        bounds_group.addLayer(layer_S11W1_41);
+        map.createPane('pane_S11B_42');
+        map.getPane('pane_S11B_42').style.zIndex = 442;
+        var img_S11B_42 = 'data/S11B_42.png';
+        var img_bounds_S11B_42 = [[-27.71166519919683,152.86584481728283],[-27.66458127462486,152.93147093437258]];
+        var layer_S11B_42 = new L.imageOverlay(img_S11B_42,
+                                              img_bounds_S11B_42,
+                                              {pane: 'pane_S11B_42'});
+        bounds_group.addLayer(layer_S11B_42);
+        map.createPane('pane_S10W10_43');
+        map.getPane('pane_S10W10_43').style.zIndex = 443;
+        var img_S10W10_43 = 'data/S10W10_43.png';
+        var img_bounds_S10W10_43 = [[-27.569504876738847,152.93670093037377],[-27.530489881424234,152.9810502493721]];
+        var layer_S10W10_43 = new L.imageOverlay(img_S10W10_43,
+                                              img_bounds_S10W10_43,
+                                              {pane: 'pane_S10W10_43'});
+        bounds_group.addLayer(layer_S10W10_43);
+        map.createPane('pane_S10W9_44');
+        map.getPane('pane_S10W9_44').style.zIndex = 444;
+        var img_S10W9_44 = 'data/S10W9_44.png';
+        var img_bounds_S10W9_44 = [[-27.491867498129857,153.05353169845904],[-27.449267035457456,153.09549662975357]];
+        var layer_S10W9_44 = new L.imageOverlay(img_S10W9_44,
+                                              img_bounds_S10W9_44,
+                                              {pane: 'pane_S10W9_44'});
+        bounds_group.addLayer(layer_S10W9_44);
+        map.createPane('pane_S10W8_45');
+        map.getPane('pane_S10W8_45').style.zIndex = 445;
+        var img_S10W8_45 = 'data/S10W8_45.png';
+        var img_bounds_S10W8_45 = [[-27.52512769594212,152.98346764697973],[-27.482641401920887,153.02406698544604]];
+        var layer_S10W8_45 = new L.imageOverlay(img_S10W8_45,
+                                              img_bounds_S10W8_45,
+                                              {pane: 'pane_S10W8_45'});
+        bounds_group.addLayer(layer_S10W8_45);
+        map.createPane('pane_S10W7_46');
+        map.getPane('pane_S10W7_46').style.zIndex = 446;
+        var img_S10W7_46 = 'data/S10W7_46.png';
+        var img_bounds_S10W7_46 = [[-27.562990406903122,153.02436207850536],[-27.519739338949954,153.06765449547186]];
+        var layer_S10W7_46 = new L.imageOverlay(img_S10W7_46,
+                                              img_bounds_S10W7_46,
+                                              {pane: 'pane_S10W7_46'});
+        bounds_group.addLayer(layer_S10W7_46);
+        map.createPane('pane_S10W6_47');
+        map.getPane('pane_S10W6_47').style.zIndex = 447;
+        var img_S10W6_47 = 'data/S10W6_47.png';
+        var img_bounds_S10W6_47 = [[-27.48649304615814,152.9939738371171],[-27.452520082454317,153.02903790330484]];
+        var layer_S10W6_47 = new L.imageOverlay(img_S10W6_47,
+                                              img_bounds_S10W6_47,
+                                              {pane: 'pane_S10W6_47'});
+        bounds_group.addLayer(layer_S10W6_47);
+        map.createPane('pane_S10W5_48');
+        map.getPane('pane_S10W5_48').style.zIndex = 448;
+        var img_S10W5_48 = 'data/S10W5_48.png';
+        var img_bounds_S10W5_48 = [[-27.522058049865812,153.05668319699373],[-27.47978984202298,153.10062559791004]];
+        var layer_S10W5_48 = new L.imageOverlay(img_S10W5_48,
+                                              img_bounds_S10W5_48,
+                                              {pane: 'pane_S10W5_48'});
+        bounds_group.addLayer(layer_S10W5_48);
+        map.createPane('pane_S10W4_49');
+        map.getPane('pane_S10W4_49').style.zIndex = 449;
+        var img_S10W4_49 = 'data/S10W4_49.png';
+        var img_bounds_S10W4_49 = [[-27.478245392551386,153.0299584850097],[-27.43568668961602,153.07086885740674]];
+        var layer_S10W4_49 = new L.imageOverlay(img_S10W4_49,
+                                              img_bounds_S10W4_49,
+                                              {pane: 'pane_S10W4_49'});
+        bounds_group.addLayer(layer_S10W4_49);
+        map.createPane('pane_S10W3_50');
+        map.getPane('pane_S10W3_50').style.zIndex = 450;
+        var img_S10W3_50 = 'data/S10W3_50.png';
+        var img_bounds_S10W3_50 = [[-27.555154119791155,153.0604424741574],[-27.514241052999814,153.1047666859819]];
+        var layer_S10W3_50 = new L.imageOverlay(img_S10W3_50,
+                                              img_bounds_S10W3_50,
+                                              {pane: 'pane_S10W3_50'});
+        bounds_group.addLayer(layer_S10W3_50);
+        map.createPane('pane_S10W2_51');
+        map.getPane('pane_S10W2_51').style.zIndex = 451;
+        var img_S10W2_51 = 'data/S10W2_51.png';
+        var img_bounds_S10W2_51 = [[-27.48577357432626,152.95859135190824],[-27.44684786130269,152.99265135080387]];
+        var layer_S10W2_51 = new L.imageOverlay(img_S10W2_51,
+                                              img_bounds_S10W2_51,
+                                              {pane: 'pane_S10W2_51'});
+        bounds_group.addLayer(layer_S10W2_51);
+        map.createPane('pane_S10W1_52');
+        map.getPane('pane_S10W1_52').style.zIndex = 452;
+        var img_S10W1_52 = 'data/S10W1_52.png';
+        var img_bounds_S10W1_52 = [[-27.555987599260845,152.96373048716416],[-27.51705223704846,152.9977989291]];
+        var layer_S10W1_52 = new L.imageOverlay(img_S10W1_52,
+                                              img_bounds_S10W1_52,
+                                              {pane: 'pane_S10W1_52'});
+        bounds_group.addLayer(layer_S10W1_52);
+        map.createPane('pane_S10B_53');
+        map.getPane('pane_S10B_53').style.zIndex = 453;
+        var img_S10B_53 = 'data/S10B_53.png';
+        var img_bounds_S10B_53 = [[-27.653533844251804,153.05736191680407],[-27.6025993945796,153.10586410343012]];
+        var layer_S10B_53 = new L.imageOverlay(img_S10B_53,
+                                              img_bounds_S10B_53,
+                                              {pane: 'pane_S10B_53'});
+        bounds_group.addLayer(layer_S10B_53);
+        map.createPane('pane_S9W10_54');
+        map.getPane('pane_S9W10_54').style.zIndex = 454;
+        var img_S9W10_54 = 'data/S9W10_54.png';
+        var img_bounds_S9W10_54 = [[-27.493618324969372,152.93716626742776],[-27.451136753523727,152.9794095130869]];
+        var layer_S9W10_54 = new L.imageOverlay(img_S9W10_54,
+                                              img_bounds_S9W10_54,
+                                              {pane: 'pane_S9W10_54'});
+        bounds_group.addLayer(layer_S9W10_54);
+        map.createPane('pane_S9W9_55');
+        map.getPane('pane_S9W9_55').style.zIndex = 455;
+        var img_S9W9_55 = 'data/S9W9_55.png';
+        var img_bounds_S9W9_55 = [[-27.54383731548099,153.03002742062654],[-27.50597621712741,153.06254505861438]];
+        var layer_S9W9_55 = new L.imageOverlay(img_S9W9_55,
+                                              img_bounds_S9W9_55,
+                                              {pane: 'pane_S9W9_55'});
+        bounds_group.addLayer(layer_S9W9_55);
+        map.createPane('pane_S9W8_56');
+        map.getPane('pane_S9W8_56').style.zIndex = 456;
+        var img_S9W8_56 = 'data/S9W8_56.png';
+        var img_bounds_S9W8_56 = [[-27.46048008208689,153.01106790174705],[-27.431574415376723,153.05175071643777]];
+        var layer_S9W8_56 = new L.imageOverlay(img_S9W8_56,
+                                              img_bounds_S9W8_56,
+                                              {pane: 'pane_S9W8_56'});
+        bounds_group.addLayer(layer_S9W8_56);
+        map.createPane('pane_S9W7_57');
+        map.getPane('pane_S9W7_57').style.zIndex = 457;
+        var img_S9W7_57 = 'data/S9W7_57.png';
+        var img_bounds_S9W7_57 = [[-27.530373080569642,152.99552112894082],[-27.499986751413484,153.03696642823203]];
+        var layer_S9W7_57 = new L.imageOverlay(img_S9W7_57,
+                                              img_bounds_S9W7_57,
+                                              {pane: 'pane_S9W7_57'});
+        bounds_group.addLayer(layer_S9W7_57);
+        map.createPane('pane_S9W6_58');
+        map.getPane('pane_S9W6_58').style.zIndex = 458;
+        var img_S9W6_58 = 'data/S9W6_58.png';
+        var img_bounds_S9W6_58 = [[-27.51418812742446,152.98669340295143],[-27.483805005530662,153.02813432771134]];
+        var layer_S9W6_58 = new L.imageOverlay(img_S9W6_58,
+                                              img_bounds_S9W6_58,
+                                              {pane: 'pane_S9W6_58'});
+        bounds_group.addLayer(layer_S9W6_58);
+        map.createPane('pane_S9W5_59');
+        map.getPane('pane_S9W5_59').style.zIndex = 459;
+        var img_S9W5_59 = 'data/S9W5_59.png';
+        var img_bounds_S9W5_59 = [[-27.477523015782065,153.07982128783195],[-27.439670774817706,153.1123313185028]];
+        var layer_S9W5_59 = new L.imageOverlay(img_S9W5_59,
+                                              img_bounds_S9W5_59,
+                                              {pane: 'pane_S9W5_59'});
+        bounds_group.addLayer(layer_S9W5_59);
+        map.createPane('pane_S9W4_60');
+        map.getPane('pane_S9W4_60').style.zIndex = 460;
+        var img_S9W4_60 = 'data/S9W4_60.png';
+        var img_bounds_S9W4_60 = [[-27.549784923866522,152.94160788959982],[-27.507550407313236,152.98557892078378]];
+        var layer_S9W4_60 = new L.imageOverlay(img_S9W4_60,
+                                              img_bounds_S9W4_60,
+                                              {pane: 'pane_S9W4_60'});
+        bounds_group.addLayer(layer_S9W4_60);
+        map.createPane('pane_S9W3_61');
+        map.getPane('pane_S9W3_61').style.zIndex = 461;
+        var img_S9W3_61 = 'data/S9W3_61.png';
+        var img_bounds_S9W3_61 = [[-27.575310354853062,153.02965399465583],[-27.53744504089815,153.06219511966012]];
+        var layer_S9W3_61 = new L.imageOverlay(img_S9W3_61,
+                                              img_bounds_S9W3_61,
+                                              {pane: 'pane_S9W3_61'});
+        bounds_group.addLayer(layer_S9W3_61);
+        map.createPane('pane_S9W2_62');
+        map.getPane('pane_S9W2_62').style.zIndex = 462;
+        var img_S9W2_62 = 'data/S9W2_62.png';
+        var img_bounds_S9W2_62 = [[-27.478475148359408,152.97461619277166],[-27.43639300259777,153.01407689292662]];
+        var layer_S9W2_62 = new L.imageOverlay(img_S9W2_62,
+                                              img_bounds_S9W2_62,
+                                              {pane: 'pane_S9W2_62'});
+        bounds_group.addLayer(layer_S9W2_62);
+        map.createPane('pane_S9W1_63');
+        map.getPane('pane_S9W1_63').style.zIndex = 463;
+        var img_S9W1_63 = 'data/S9W1_63.png';
+        var img_bounds_S9W1_63 = [[-27.51218267583761,152.99050477318815],[-27.472479653787204,153.0348787390092]];
+        var layer_S9W1_63 = new L.imageOverlay(img_S9W1_63,
+                                              img_bounds_S9W1_63,
+                                              {pane: 'pane_S9W1_63'});
+        bounds_group.addLayer(layer_S9W1_63);
+        map.createPane('pane_S9B3_64');
+        map.getPane('pane_S9B3_64').style.zIndex = 464;
+        var img_S9B3_64 = 'data/S9B3_64.png';
+        var img_bounds_S9B3_64 = [[-27.4754632784891,153.0414482659761],[-27.43544333317548,153.073336819432]];
+        var layer_S9B3_64 = new L.imageOverlay(img_S9B3_64,
+                                              img_bounds_S9B3_64,
+                                              {pane: 'pane_S9B3_64'});
+        bounds_group.addLayer(layer_S9B3_64);
+        map.createPane('pane_S9B2_65');
+        map.getPane('pane_S9B2_65').style.zIndex = 465;
+        var img_S9B2_65 = 'data/S9B2_65.png';
+        var img_bounds_S9B2_65 = [[-27.48642896995359,153.0140253724709],[-27.45813203871367,153.059131782671]];
+        var layer_S9B2_65 = new L.imageOverlay(img_S9B2_65,
+                                              img_bounds_S9B2_65,
+                                              {pane: 'pane_S9B2_65'});
+        bounds_group.addLayer(layer_S9B2_65);
+        map.createPane('pane_S9B1_66');
+        map.getPane('pane_S9B1_66').style.zIndex = 466;
+        var img_S9B1_66 = 'data/S9B1_66.png';
+        var img_bounds_S9B1_66 = [[-27.4929882158565,152.9881435664423],[-27.46469128461652,153.0332526620286]];
+        var layer_S9B1_66 = new L.imageOverlay(img_S9B1_66,
+                                              img_bounds_S9B1_66,
+                                              {pane: 'pane_S9B1_66'});
+        bounds_group.addLayer(layer_S9B1_66);
+        map.createPane('pane_S8W10_67');
+        map.getPane('pane_S8W10_67').style.zIndex = 467;
+        var img_S8W10_67 = 'data/S8W10_67.png';
+        var img_bounds_S8W10_67 = [[-27.47803295751862,152.94136258040206],[-27.440797398325774,152.98539641871503]];
+        var layer_S8W10_67 = new L.imageOverlay(img_S8W10_67,
+                                              img_bounds_S8W10_67,
+                                              {pane: 'pane_S8W10_67'});
+        bounds_group.addLayer(layer_S8W10_67);
+        map.createPane('pane_S8W9_68');
+        map.getPane('pane_S8W9_68').style.zIndex = 468;
+        var img_S8W9_68 = 'data/S8W9_68.png';
+        var img_bounds_S8W9_68 = [[-27.56112189629295,153.0101110967572],[-27.523278346649676,153.04263072445593]];
+        var layer_S8W9_68 = new L.imageOverlay(img_S8W9_68,
+                                              img_bounds_S8W9_68,
+                                              {pane: 'pane_S8W9_68'});
+        bounds_group.addLayer(layer_S8W9_68);
+        map.createPane('pane_S8W8_69');
+        map.getPane('pane_S8W8_69').style.zIndex = 469;
+        var img_S8W8_69 = 'data/S8W8_69.png';
+        var img_bounds_S8W8_69 = [[-27.459752301011495,153.0364070923121],[-27.429379945973512,153.07781267020061]];
+        var layer_S8W8_69 = new L.imageOverlay(img_S8W8_69,
+                                              img_bounds_S8W8_69,
+                                              {pane: 'pane_S8W8_69'});
+        bounds_group.addLayer(layer_S8W8_69);
+        map.createPane('pane_S8W7_70');
+        map.getPane('pane_S8W7_70').style.zIndex = 470;
+        var img_S8W7_70 = 'data/S8W7_70.png';
+        var img_bounds_S8W7_70 = [[-27.519862406232555,153.07217177715154],[-27.482719516473246,153.1036935771772]];
+        var layer_S8W7_70 = new L.imageOverlay(img_S8W7_70,
+                                              img_bounds_S8W7_70,
+                                              {pane: 'pane_S8W7_70'});
+        bounds_group.addLayer(layer_S8W7_70);
+        map.createPane('pane_S8W6_71');
+        map.getPane('pane_S8W6_71').style.zIndex = 471;
+        var img_S8W6_71 = 'data/S8W6_71.png';
+        var img_bounds_S8W6_71 = [[-27.43722180869925,152.99537820134947],[-27.406853901490404,153.03677771566683]];
+        var layer_S8W6_71 = new L.imageOverlay(img_S8W6_71,
+                                              img_bounds_S8W6_71,
+                                              {pane: 'pane_S8W6_71'});
+        bounds_group.addLayer(layer_S8W6_71);
+        map.createPane('pane_S8W5_72');
+        map.getPane('pane_S8W5_72').style.zIndex = 472;
+        var img_S8W5_72 = 'data/S8W5_72.png';
+        var img_bounds_S8W5_72 = [[-27.51729458764616,152.99077942161688],[-27.486910850064053,153.03222118614212]];
+        var layer_S8W5_72 = new L.imageOverlay(img_S8W5_72,
+                                              img_bounds_S8W5_72,
+                                              {pane: 'pane_S8W5_72'});
+        bounds_group.addLayer(layer_S8W5_72);
+        map.createPane('pane_S8W4_73');
+        map.getPane('pane_S8W4_73').style.zIndex = 473;
+        var img_S8W4_73 = 'data/S8W4_73.png';
+        var img_bounds_S8W4_73 = [[-27.495288722086666,152.96240534254966],[-27.45312464589884,153.00208684241932]];
+        var layer_S8W4_73 = new L.imageOverlay(img_S8W4_73,
+                                              img_bounds_S8W4_73,
+                                              {pane: 'pane_S8W4_73'});
+        bounds_group.addLayer(layer_S8W4_73);
+        map.createPane('pane_S8W3_74');
+        map.getPane('pane_S8W3_74').style.zIndex = 474;
+        var img_S8W3_74 = 'data/S8W3_74.png';
+        var img_bounds_S8W3_74 = [[-27.549285225430125,153.03745215488857],[-27.519060515288494,153.07881990112207]];
+        var layer_S8W3_74 = new L.imageOverlay(img_S8W3_74,
+                                              img_bounds_S8W3_74,
+                                              {pane: 'pane_S8W3_74'});
+        bounds_group.addLayer(layer_S8W3_74);
+        map.createPane('pane_S8W2_75');
+        map.getPane('pane_S8W2_75').style.zIndex = 475;
+        var img_S8W2_75 = 'data/S8W2_75.png';
+        var img_bounds_S8W2_75 = [[-27.47394845885032,153.0012452335374],[-27.434587494559565,153.0359392822841]];
+        var layer_S8W2_75 = new L.imageOverlay(img_S8W2_75,
+                                              img_bounds_S8W2_75,
+                                              {pane: 'pane_S8W2_75'});
+        bounds_group.addLayer(layer_S8W2_75);
+        map.createPane('pane_S8W1_76');
+        map.getPane('pane_S8W1_76').style.zIndex = 476;
+        var img_S8W1_76 = 'data/S8W1_76.png';
+        var img_bounds_S8W1_76 = [[-27.50151457487842,153.06874256525182],[-27.467517623350233,153.1117709257878]];
+        var layer_S8W1_76 = new L.imageOverlay(img_S8W1_76,
+                                              img_bounds_S8W1_76,
+                                              {pane: 'pane_S8W1_76'});
+        bounds_group.addLayer(layer_S8W1_76);
+        map.createPane('pane_S8B_77');
+        map.getPane('pane_S8B_77').style.zIndex = 477;
+        var img_S8B_77 = 'data/S8B_77.png';
+        var img_bounds_S8B_77 = [[-27.650423634281676,153.13000298793855],[-27.599251313705317,153.17960150928005]];
+        var layer_S8B_77 = new L.imageOverlay(img_S8B_77,
+                                              img_bounds_S8B_77,
+                                              {pane: 'pane_S8B_77'});
+        bounds_group.addLayer(layer_S8B_77);
+        map.createPane('pane_S7W10_78');
+        map.getPane('pane_S7W10_78').style.zIndex = 478;
+        var img_S7W10_78 = 'data/S7W10_78.png';
+        var img_bounds_S7W10_78 = [[-27.49293937661478,152.96198746311197],[-27.450575873902967,153.0058595198228]];
+        var layer_S7W10_78 = new L.imageOverlay(img_S7W10_78,
+                                              img_bounds_S7W10_78,
+                                              {pane: 'pane_S7W10_78'});
+        bounds_group.addLayer(layer_S7W10_78);
+        map.createPane('pane_S7W9_79');
+        map.getPane('pane_S7W9_79').style.zIndex = 479;
+        var img_S7W9_79 = 'data/S7W9_79.png';
+        var img_bounds_S7W9_79 = [[-27.52816096597299,153.048169373591],[-27.497775074380602,153.08961407606907]];
+        var layer_S7W9_79 = new L.imageOverlay(img_S7W9_79,
+                                              img_bounds_S7W9_79,
+                                              {pane: 'pane_S7W9_79'});
+        bounds_group.addLayer(layer_S7W9_79);
+        map.createPane('pane_S7W8_80');
+        map.getPane('pane_S7W8_80').style.zIndex = 480;
+        var img_S7W8_80 = 'data/S7W8_80.png';
+        var img_bounds_S7W8_80 = [[-27.433742910592905,153.02435616999472],[-27.395916353441795,153.05684133928565]];
+        var layer_S7W8_80 = new L.imageOverlay(img_S7W8_80,
+                                              img_bounds_S7W8_80,
+                                              {pane: 'pane_S7W8_80'});
+        bounds_group.addLayer(layer_S7W8_80);
+        map.createPane('pane_S7W7_81');
+        map.getPane('pane_S7W7_81').style.zIndex = 481;
+        var img_S7W7_81 = 'data/S7W7_81.png';
+        var img_bounds_S7W7_81 = [[-27.56582190083575,153.06161002402834],[-27.524120437735036,153.10577181142702]];
+        var layer_S7W7_81 = new L.imageOverlay(img_S7W7_81,
+                                              img_bounds_S7W7_81,
+                                              {pane: 'pane_S7W7_81'});
+        bounds_group.addLayer(layer_S7W7_81);
+        map.createPane('pane_S7W6_82');
+        map.getPane('pane_S7W6_82').style.zIndex = 482;
+        var img_S7W6_82 = 'data/S7W6_82.png';
+        var img_bounds_S7W6_82 = [[-27.531524756023188,152.92077219496804],[-27.50289507994933,152.9613085088892]];
+        var layer_S7W6_82 = new L.imageOverlay(img_S7W6_82,
+                                              img_bounds_S7W6_82,
+                                              {pane: 'pane_S7W6_82'});
+        bounds_group.addLayer(layer_S7W6_82);
+        map.createPane('pane_S7W5_83');
+        map.getPane('pane_S7W5_83').style.zIndex = 483;
+        var img_S7W5_83 = 'data/S7W5_83.png';
+        var img_bounds_S7W5_83 = [[-27.491210635016614,153.06802984777258],[-27.453594878541796,153.1002038316634]];
+        var layer_S7W5_83 = new L.imageOverlay(img_S7W5_83,
+                                              img_bounds_S7W5_83,
+                                              {pane: 'pane_S7W5_83'});
+        bounds_group.addLayer(layer_S7W5_83);
+        map.createPane('pane_S7W4_84');
+        map.getPane('pane_S7W4_84').style.zIndex = 484;
+        var img_S7W4_84 = 'data/S7W4_84.png';
+        var img_bounds_S7W4_84 = [[-27.539428877855368,152.96512210422262],[-27.501826581152972,152.9973015657429]];
+        var layer_S7W4_84 = new L.imageOverlay(img_S7W4_84,
+                                              img_bounds_S7W4_84,
+                                              {pane: 'pane_S7W4_84'});
+        bounds_group.addLayer(layer_S7W4_84);
+        map.createPane('pane_S7W3_85');
+        map.getPane('pane_S7W3_85').style.zIndex = 485;
+        var img_S7W3_85 = 'data/S7W3_85.png';
+        var img_bounds_S7W3_85 = [[-27.558715913280373,153.02942575451277],[-27.518647940094432,153.0652425892447]];
+        var layer_S7W3_85 = new L.imageOverlay(img_S7W3_85,
+                                              img_bounds_S7W3_85,
+                                              {pane: 'pane_S7W3_85'});
+        bounds_group.addLayer(layer_S7W3_85);
+        map.createPane('pane_S7W2_86');
+        map.getPane('pane_S7W2_86').style.zIndex = 486;
+        var img_S7W2_86 = 'data/S7W2_86.png';
+        var img_bounds_S7W2_86 = [[-27.4514338977269,152.9909864831413],[-27.421042527591407,153.03241047846535]];
+        var layer_S7W2_86 = new L.imageOverlay(img_S7W2_86,
+                                              img_bounds_S7W2_86,
+                                              {pane: 'pane_S7W2_86'});
+        bounds_group.addLayer(layer_S7W2_86);
+        map.createPane('pane_S7W1_87');
+        map.getPane('pane_S7W1_87').style.zIndex = 487;
+        var img_S7W1_87 = 'data/S7W1_87.png';
+        var img_bounds_S7W1_87 = [[-27.510556315301983,153.0017778225139],[-27.46771266588683,153.04538616803535]];
+        var layer_S7W1_87 = new L.imageOverlay(img_S7W1_87,
+                                              img_bounds_S7W1_87,
+                                              {pane: 'pane_S7W1_87'});
+        bounds_group.addLayer(layer_S7W1_87);
+        map.createPane('pane_S7B_88');
+        map.getPane('pane_S7B_88').style.zIndex = 488;
+        var img_S7B_88 = 'data/S7B_88.png';
+        var img_bounds_S7B_88 = [[-27.46811827932479,153.14268164194917],[-27.417169561972635,153.19127118108904]];
+        var layer_S7B_88 = new L.imageOverlay(img_S7B_88,
+                                              img_bounds_S7B_88,
+                                              {pane: 'pane_S7B_88'});
+        bounds_group.addLayer(layer_S7B_88);
+        map.createPane('pane_S6W10_89');
+        map.getPane('pane_S6W10_89').style.zIndex = 489;
+        var img_S6W10_89 = 'data/S6W10_89.png';
+        var img_bounds_S6W10_89 = [[-27.54916414940919,153.0165774130603],[-27.506103012301434,153.06003133058334]];
+        var layer_S6W10_89 = new L.imageOverlay(img_S6W10_89,
+                                              img_bounds_S6W10_89,
+                                              {pane: 'pane_S6W10_89'});
+        bounds_group.addLayer(layer_S6W10_89);
+        map.createPane('pane_S6W9_90');
+        map.getPane('pane_S6W9_90').style.zIndex = 490;
+        var img_S6W9_90 = 'data/S6W9_90.png';
+        var img_bounds_S6W9_90 = [[-27.51848552588728,153.09704312238466],[-27.48177976101641,153.12798878346086]];
+        var layer_S6W9_90 = new L.imageOverlay(img_S6W9_90,
+                                              img_bounds_S6W9_90,
+                                              {pane: 'pane_S6W9_90'});
+        bounds_group.addLayer(layer_S6W9_90);
+        map.createPane('pane_S6W8_91');
+        map.getPane('pane_S6W8_91').style.zIndex = 491;
+        var img_S6W8_91 = 'data/S6W8_91.png';
+        var img_bounds_S6W8_91 = [[-27.524604138198907,152.9394099726071],[-27.482018616987993,152.98040648183255]];
+        var layer_S6W8_91 = new L.imageOverlay(img_S6W8_91,
+                                              img_bounds_S6W8_91,
+                                              {pane: 'pane_S6W8_91'});
+        bounds_group.addLayer(layer_S6W8_91);
+        map.createPane('pane_S6W7_92');
+        map.getPane('pane_S6W7_92').style.zIndex = 492;
+        var img_S6W7_92 = 'data/S6W7_92.png';
+        var img_bounds_S6W7_92 = [[-27.506754897632323,153.032765240274],[-27.471599761447372,153.0616440922587]];
+        var layer_S6W7_92 = new L.imageOverlay(img_S6W7_92,
+                                              img_bounds_S6W7_92,
+                                              {pane: 'pane_S6W7_92'});
+        bounds_group.addLayer(layer_S6W7_92);
+        map.createPane('pane_S6W6_93');
+        map.getPane('pane_S6W6_93').style.zIndex = 493;
+        var img_S6W6_93 = 'data/S6W6_93.png';
+        var img_bounds_S6W6_93 = [[-27.47442981853748,152.96852954852824],[-27.43512909958514,153.01287200009065]];
+        var layer_S6W6_93 = new L.imageOverlay(img_S6W6_93,
+                                              img_bounds_S6W6_93,
+                                              {pane: 'pane_S6W6_93'});
+        bounds_group.addLayer(layer_S6W6_93);
+        map.createPane('pane_S6W5_94');
+        map.getPane('pane_S6W5_94').style.zIndex = 494;
+        var img_S6W5_94 = 'data/S6W5_94.png';
+        var img_bounds_S6W5_94 = [[-27.511119016095464,153.05973512102358],[-27.47328215170162,153.0922490039699]];
+        var layer_S6W5_94 = new L.imageOverlay(img_S6W5_94,
+                                              img_bounds_S6W5_94,
+                                              {pane: 'pane_S6W5_94'});
+        bounds_group.addLayer(layer_S6W5_94);
+        map.createPane('pane_S6W4_95');
+        map.getPane('pane_S6W4_95').style.zIndex = 495;
+        var img_S6W4_95 = 'data/S6W4_95.png';
+        var img_bounds_S6W4_95 = [[-27.46447787746344,152.93926400412533],[-27.43724494972159,152.97901829318096]];
+        var layer_S6W4_95 = new L.imageOverlay(img_S6W4_95,
+                                              img_bounds_S6W4_95,
+                                              {pane: 'pane_S6W4_95'});
+        bounds_group.addLayer(layer_S6W4_95);
+        map.createPane('pane_S6W3_96');
+        map.getPane('pane_S6W3_96').style.zIndex = 496;
+        var img_S6W3_96 = 'data/S6W3_96.png';
+        var img_bounds_S6W3_96 = [[-27.550601845558198,153.08550381050307],[-27.513872051866766,153.11649271161644]];
+        var layer_S6W3_96 = new L.imageOverlay(img_S6W3_96,
+                                              img_bounds_S6W3_96,
+                                              {pane: 'pane_S6W3_96'});
+        bounds_group.addLayer(layer_S6W3_96);
+        map.createPane('pane_S6W2_97');
+        map.getPane('pane_S6W2_97').style.zIndex = 497;
+        var img_S6W2_97 = 'data/S6W2_97.png';
+        var img_bounds_S6W2_97 = [[-27.469922374518237,152.99981268677607],[-27.43209100410566,153.03228213067348]];
+        var layer_S6W2_97 = new L.imageOverlay(img_S6W2_97,
+                                              img_bounds_S6W2_97,
+                                              {pane: 'pane_S6W2_97'});
+        bounds_group.addLayer(layer_S6W2_97);
+        map.createPane('pane_S6W1_98');
+        map.getPane('pane_S6W1_98').style.zIndex = 498;
+        var img_S6W1_98 = 'data/S6W1_98.png';
+        var img_bounds_S6W1_98 = [[-27.504258783053405,152.99104351732927],[-27.461974812984078,153.03496015290958]];
+        var layer_S6W1_98 = new L.imageOverlay(img_S6W1_98,
+                                              img_bounds_S6W1_98,
+                                              {pane: 'pane_S6W1_98'});
+        bounds_group.addLayer(layer_S6W1_98);
+        map.createPane('pane_S6B_99');
+        map.getPane('pane_S6B_99').style.zIndex = 499;
+        var img_S6B_99 = 'data/S6B_99.png';
+        var img_bounds_S6B_99 = [[-27.565949769922618,153.02855074349617],[-27.516157386557488,153.08161796223956]];
+        var layer_S6B_99 = new L.imageOverlay(img_S6B_99,
+                                              img_bounds_S6B_99,
+                                              {pane: 'pane_S6B_99'});
+        bounds_group.addLayer(layer_S6B_99);
+        map.createPane('pane_S5W10_100');
+        map.getPane('pane_S5W10_100').style.zIndex = 500;
+        var img_S5W10_100 = 'data/S5W10_100.png';
+        var img_bounds_S5W10_100 = [[-27.471367369455955,152.96125060443418],[-27.433535806848,152.99372021328668]];
+        var layer_S5W10_100 = new L.imageOverlay(img_S5W10_100,
+                                              img_bounds_S5W10_100,
+                                              {pane: 'pane_S5W10_100'});
+        bounds_group.addLayer(layer_S5W10_100);
+        map.createPane('pane_S5W9_101');
+        map.getPane('pane_S5W9_101').style.zIndex = 501;
+        var img_S5W9_101 = 'data/S5W9_101.png';
+        var img_bounds_S5W9_101 = [[-27.52359367980181,153.01748103436617],[-27.485755149862783,153.04997648579936]];
+        var layer_S5W9_101 = new L.imageOverlay(img_S5W9_101,
+                                              img_bounds_S5W9_101,
+                                              {pane: 'pane_S5W9_101'});
+        bounds_group.addLayer(layer_S5W9_101);
+        map.createPane('pane_S5W8_102');
+        map.getPane('pane_S5W8_102').style.zIndex = 502;
+        var img_S5W8_102 = 'data/S5W8_102.png';
+        var img_bounds_S5W8_102 = [[-27.519371474282565,152.97360714677686],[-27.48293601755263,153.02331215377944]];
+        var layer_S5W8_102 = new L.imageOverlay(img_S5W8_102,
+                                              img_bounds_S5W8_102,
+                                              {pane: 'pane_S5W8_102'});
+        bounds_group.addLayer(layer_S5W8_102);
+        map.createPane('pane_S5W7_103');
+        map.getPane('pane_S5W7_103').style.zIndex = 503;
+        var img_S5W7_103 = 'data/S5W7_103.png';
+        var img_bounds_S5W7_103 = [[-27.503002284126662,153.04487710943528],[-27.460470698486464,153.08869001592566]];
+        var layer_S5W7_103 = new L.imageOverlay(img_S5W7_103,
+                                              img_bounds_S5W7_103,
+                                              {pane: 'pane_S5W7_103'});
+        bounds_group.addLayer(layer_S5W7_103);
+        map.createPane('pane_S5W6_104');
+        map.getPane('pane_S5W6_104').style.zIndex = 504;
+        var img_S5W6_104 = 'data/S5W6_104.png';
+        var img_bounds_S5W6_104 = [[-27.509746534186814,152.9510144392539],[-27.467183105748553,152.99192935413154]];
+        var layer_S5W6_104 = new L.imageOverlay(img_S5W6_104,
+                                              img_bounds_S5W6_104,
+                                              {pane: 'pane_S5W6_104'});
+        bounds_group.addLayer(layer_S5W6_104);
+        map.createPane('pane_S5W5_105');
+        map.getPane('pane_S5W5_105').style.zIndex = 505;
+        var img_S5W5_105 = 'data/S5W5_105.png';
+        var img_bounds_S5W5_105 = [[-27.54903379743789,153.01187114862984],[-27.51119186625728,153.04438938555512]];
+        var layer_S5W5_105 = new L.imageOverlay(img_S5W5_105,
+                                              img_bounds_S5W5_105,
+                                              {pane: 'pane_S5W5_105'});
+        bounds_group.addLayer(layer_S5W5_105);
+        map.createPane('pane_S5W4_106');
+        map.getPane('pane_S5W4_106').style.zIndex = 506;
+        var img_S5W4_106 = 'data/S5W4_106.png';
+        var img_bounds_S5W4_106 = [[-27.498217751864125,153.01357685130995],[-27.4678584557843,153.05499280048898]];
+        var layer_S5W4_106 = new L.imageOverlay(img_S5W4_106,
+                                              img_bounds_S5W4_106,
+                                              {pane: 'pane_S5W4_106'});
+        bounds_group.addLayer(layer_S5W4_106);
+        map.createPane('pane_S5W3_107');
+        map.getPane('pane_S5W3_107').style.zIndex = 507;
+        var img_S5W3_107 = 'data/S5W3_107.png';
+        var img_bounds_S5W3_107 = [[-27.44531407481305,152.9779247836495],[-27.39992096469305,153.01688422461865]];
+        var layer_S5W3_107 = new L.imageOverlay(img_S5W3_107,
+                                              img_bounds_S5W3_107,
+                                              {pane: 'pane_S5W3_107'});
+        bounds_group.addLayer(layer_S5W3_107);
+        map.createPane('pane_S5W2_108');
+        map.getPane('pane_S5W2_108').style.zIndex = 508;
+        var img_S5W2_108 = 'data/S5W2_108.png';
+        var img_bounds_S5W2_108 = [[-27.553435979460485,152.92407503609894],[-27.523065745523898,152.96552658071627]];
+        var layer_S5W2_108 = new L.imageOverlay(img_S5W2_108,
+                                              img_bounds_S5W2_108,
+                                              {pane: 'pane_S5W2_108'});
+        bounds_group.addLayer(layer_S5W2_108);
+        map.createPane('pane_S5W1_109');
+        map.getPane('pane_S5W1_109').style.zIndex = 509;
+        var img_S5W1_109 = 'data/S5W1_109.png';
+        var img_bounds_S5W1_109 = [[-27.519537179034455,153.05641155116996],[-27.489152997787436,153.09785392083]];
+        var layer_S5W1_109 = new L.imageOverlay(img_S5W1_109,
+                                              img_bounds_S5W1_109,
+                                              {pane: 'pane_S5W1_109'});
+        bounds_group.addLayer(layer_S5W1_109);
+        map.createPane('pane_S5B_110');
+        map.getPane('pane_S5B_110').style.zIndex = 510;
+        var img_S5B_110 = 'data/S5B_110.png';
+        var img_bounds_S5B_110 = [[-27.391313297913516,152.93341486993384],[-27.354932936459164,152.98305374186373]];
+        var layer_S5B_110 = new L.imageOverlay(img_S5B_110,
+                                              img_bounds_S5B_110,
+                                              {pane: 'pane_S5B_110'});
+        bounds_group.addLayer(layer_S5B_110);
+        map.createPane('pane_S4W10_111');
+        map.getPane('pane_S4W10_111').style.zIndex = 511;
+        var img_S4W10_111 = 'data/S4W10_111.png';
+        var img_bounds_S4W10_111 = [[-27.467429126259947,152.9857374159898],[-27.43707591544825,153.02714506368665]];
+        var layer_S4W10_111 = new L.imageOverlay(img_S4W10_111,
+                                              img_bounds_S4W10_111,
+                                              {pane: 'pane_S4W10_111'});
+        bounds_group.addLayer(layer_S4W10_111);
+        map.createPane('pane_S4W9_112');
+        map.getPane('pane_S4W9_112').style.zIndex = 512;
+        var img_S4W9_112 = 'data/S4W9_112.png';
+        var img_bounds_S4W9_112 = [[-27.59734708566825,153.028975824757],[-27.560893063850408,153.07873097366425]];
+        var layer_S4W9_112 = new L.imageOverlay(img_S4W9_112,
+                                              img_bounds_S4W9_112,
+                                              {pane: 'pane_S4W9_112'});
+        bounds_group.addLayer(layer_S4W9_112);
+        map.createPane('pane_S4W8_113');
+        map.getPane('pane_S4W8_113').style.zIndex = 513;
+        var img_S4W8_113 = 'data/S4W8_113.png';
+        var img_bounds_S4W8_113 = [[-27.550447784599104,153.0205730924654],[-27.507324277373883,153.06396534637994]];
+        var layer_S4W8_113 = new L.imageOverlay(img_S4W8_113,
+                                              img_bounds_S4W8_113,
+                                              {pane: 'pane_S4W8_113'});
+        bounds_group.addLayer(layer_S4W8_113);
+        map.createPane('pane_S4W7_114');
+        map.getPane('pane_S4W7_114').style.zIndex = 514;
+        var img_S4W7_114 = 'data/S4W7_114.png';
+        var img_bounds_S4W7_114 = [[-27.507946427987065,152.9624275392755],[-27.477585208317613,153.00384611260264]];
+        var layer_S4W7_114 = new L.imageOverlay(img_S4W7_114,
+                                              img_bounds_S4W7_114,
+                                              {pane: 'pane_S4W7_114'});
+        bounds_group.addLayer(layer_S4W7_114);
+        map.createPane('pane_S4W6_115');
+        map.getPane('pane_S4W6_115').style.zIndex = 515;
+        var img_S4W6_115 = 'data/S4W6_115.png';
+        var img_bounds_S4W6_115 = [[-27.52054261157929,153.03704808400693],[-27.482704489338936,153.06954318531152]];
+        var layer_S4W6_115 = new L.imageOverlay(img_S4W6_115,
+                                              img_bounds_S4W6_115,
+                                              {pane: 'pane_S4W6_115'});
+        bounds_group.addLayer(layer_S4W6_115);
+        map.createPane('pane_S4W5_116');
+        map.getPane('pane_S4W5_116').style.zIndex = 516;
+        var img_S4W5_116 = 'data/S4W5_116.png';
+        var img_bounds_S4W5_116 = [[-27.44925651004714,153.03440164862164],[-27.41142789049165,153.0668687315472]];
+        var layer_S4W5_116 = new L.imageOverlay(img_S4W5_116,
+                                              img_bounds_S4W5_116,
+                                              {pane: 'pane_S4W5_116'});
+        bounds_group.addLayer(layer_S4W5_116);
+        map.createPane('pane_S4W4_117');
+        map.getPane('pane_S4W4_117').style.zIndex = 517;
+        var img_S4W4_117 = 'data/S4W4_117.png';
+        var img_bounds_S4W4_117 = [[-27.555578291113665,153.0422606072267],[-27.513286059334792,153.08224851825105]];
+        var layer_S4W4_117 = new L.imageOverlay(img_S4W4_117,
+                                              img_bounds_S4W4_117,
+                                              {pane: 'pane_S4W4_117'});
+        bounds_group.addLayer(layer_S4W4_117);
+        map.createPane('pane_S4W3_118');
+        map.getPane('pane_S4W3_118').style.zIndex = 518;
+        var img_S4W3_118 = 'data/S4W3_118.png';
+        var img_bounds_S4W3_118 = [[-27.490242901783137,152.97572845539597],[-27.44699168541488,153.0189796717642]];
+        var layer_S4W3_118 = new L.imageOverlay(img_S4W3_118,
+                                              img_bounds_S4W3_118,
+                                              {pane: 'pane_S4W3_118'});
+        bounds_group.addLayer(layer_S4W3_118);
+        map.createPane('pane_S4W2_119');
+        map.getPane('pane_S4W2_119').style.zIndex = 519;
+        var img_S4W2_119 = 'data/S4W2_119.png';
+        var img_bounds_S4W2_119 = [[-27.499478732891948,153.1021333572449],[-27.46911918773914,153.14354964620762]];
+        var layer_S4W2_119 = new L.imageOverlay(img_S4W2_119,
+                                              img_bounds_S4W2_119,
+                                              {pane: 'pane_S4W2_119'});
+        bounds_group.addLayer(layer_S4W2_119);
+        map.createPane('pane_S4W1_120');
+        map.getPane('pane_S4W1_120').style.zIndex = 520;
+        var img_S4W1_120 = 'data/S4W1_120.png';
+        var img_bounds_S4W1_120 = [[-27.51202375189076,152.99794464912807],[-27.4816617246925,153.03936432408062]];
+        var layer_S4W1_120 = new L.imageOverlay(img_S4W1_120,
+                                              img_bounds_S4W1_120,
+                                              {pane: 'pane_S4W1_120'});
+        bounds_group.addLayer(layer_S4W1_120);
+        map.createPane('pane_S4B_121');
+        map.getPane('pane_S4B_121').style.zIndex = 521;
+        var img_S4B_121 = 'data/S4B_121.png';
+        var img_bounds_S4B_121 = [[-27.49544316553068,152.91864297773705],[-27.45252713409626,152.97720052857247]];
+        var layer_S4B_121 = new L.imageOverlay(img_S4B_121,
+                                              img_bounds_S4B_121,
+                                              {pane: 'pane_S4B_121'});
+        bounds_group.addLayer(layer_S4B_121);
+        map.createPane('pane_S3W10_122');
+        map.getPane('pane_S3W10_122').style.zIndex = 522;
+        var img_S3W10_122 = 'data/S3W10_122.png';
+        var img_bounds_S3W10_122 = [[-27.56245391472874,153.03581495969996],[-27.532081891525376,153.0772689464411]];
+        var layer_S3W10_122 = new L.imageOverlay(img_S3W10_122,
+                                              img_bounds_S3W10_122,
+                                              {pane: 'pane_S3W10_122'});
+        bounds_group.addLayer(layer_S3W10_122);
+        map.createPane('pane_S3W9_123');
+        map.getPane('pane_S3W9_123').style.zIndex = 523;
+        var img_S3W9_123 = 'data/S3W9_123.png';
+        var img_bounds_S3W9_123 = [[-27.51218489182467,152.92826548949395],[-27.481843498448708,152.96968521178647]];
+        var layer_S3W9_123 = new L.imageOverlay(img_S3W9_123,
+                                              img_bounds_S3W9_123,
+                                              {pane: 'pane_S3W9_123'});
+        bounds_group.addLayer(layer_S3W9_123);
+        map.createPane('pane_S3W8_124');
+        map.getPane('pane_S3W8_124').style.zIndex = 524;
+        var img_S3W8_124 = 'data/S3W8_124.png';
+        var img_bounds_S3W8_124 = [[-27.449945230245184,153.0040516401583],[-27.41211651946291,153.03651880138088]];
+        var layer_S3W8_124 = new L.imageOverlay(img_S3W8_124,
+                                              img_bounds_S3W8_124,
+                                              {pane: 'pane_S3W8_124'});
+        bounds_group.addLayer(layer_S3W8_124);
+        map.createPane('pane_S3W7_125');
+        map.getPane('pane_S3W7_125').style.zIndex = 525;
+        var img_S3W7_125 = 'data/S3W7_125.png';
+        var img_bounds_S3W7_125 = [[-27.530747462942124,152.96456971837154],[-27.49430930393821,153.01427841179824]];
+        var layer_S3W7_125 = new L.imageOverlay(img_S3W7_125,
+                                              img_bounds_S3W7_125,
+                                              {pane: 'pane_S3W7_125'});
+        bounds_group.addLayer(layer_S3W7_125);
+        map.createPane('pane_S3W6_126');
+        map.getPane('pane_S3W6_126').style.zIndex = 526;
+        var img_S3W6_126 = 'data/S3W6_126.png';
+        var img_bounds_S3W6_126 = [[-27.491308559791275,153.05117329906156],[-27.460950630207854,153.0925873840753]];
+        var layer_S3W6_126 = new L.imageOverlay(img_S3W6_126,
+                                              img_bounds_S3W6_126,
+                                              {pane: 'pane_S3W6_126'});
+        bounds_group.addLayer(layer_S3W6_126);
+        map.createPane('pane_S3W5_127');
+        map.getPane('pane_S3W5_127').style.zIndex = 527;
+        var img_S3W5_127 = 'data/S3W5_127.png';
+        var img_bounds_S3W5_127 = [[-27.52768351272902,153.02052860074147],[-27.489844436613943,153.05302452122666]];
+        var layer_S3W5_127 = new L.imageOverlay(img_S3W5_127,
+                                              img_bounds_S3W5_127,
+                                              {pane: 'pane_S3W5_127'});
+        bounds_group.addLayer(layer_S3W5_127);
+        map.createPane('pane_S3W4_128');
+        map.getPane('pane_S3W4_128').style.zIndex = 528;
+        var img_S3W4_128 = 'data/S3W4_128.png';
+        var img_bounds_S3W4_128 = [[-27.48617674183278,152.96301668027428],[-27.455840488866077,153.00442938527786]];
+        var layer_S3W4_128 = new L.imageOverlay(img_S3W4_128,
+                                              img_bounds_S3W4_128,
+                                              {pane: 'pane_S3W4_128'});
+        bounds_group.addLayer(layer_S3W4_128);
+        map.createPane('pane_S3W3_129');
+        map.getPane('pane_S3W3_129').style.zIndex = 529;
+        var img_S3W3_129 = 'data/S3W3_129.png';
+        var img_bounds_S3W3_129 = [[-27.54207753111186,153.06629053324903],[-27.504236530280476,153.09880797070886]];
+        var layer_S3W3_129 = new L.imageOverlay(img_S3W3_129,
+                                              img_bounds_S3W3_129,
+                                              {pane: 'pane_S3W3_129'});
+        bounds_group.addLayer(layer_S3W3_129);
+        map.createPane('pane_S3W2_130');
+        map.getPane('pane_S3W2_130').style.zIndex = 530;
+        var img_S3W2_130 = 'data/S3W2_130.png';
+        var img_bounds_S3W2_130 = [[-27.47735793645117,153.0299924821753],[-27.44400798187187,153.0565675370057]];
+        var layer_S3W2_130 = new L.imageOverlay(img_S3W2_130,
+                                              img_bounds_S3W2_130,
+                                              {pane: 'pane_S3W2_130'});
+        bounds_group.addLayer(layer_S3W2_130);
+        map.createPane('pane_S3W1_131');
+        map.getPane('pane_S3W1_131').style.zIndex = 531;
+        var img_S3W1_131 = 'data/S3W1_131.png';
+        var img_bounds_S3W1_131 = [[-27.51603484108151,153.0893206130996],[-27.49245406499466,153.1269202004969]];
+        var layer_S3W1_131 = new L.imageOverlay(img_S3W1_131,
+                                              img_bounds_S3W1_131,
+                                              {pane: 'pane_S3W1_131'});
+        bounds_group.addLayer(layer_S3W1_131);
+        map.createPane('pane_S3B_132');
+        map.getPane('pane_S3B_132').style.zIndex = 532;
+        var img_S3B_132 = 'data/S3B_132.png';
+        var img_bounds_S3B_132 = [[-27.64806750397306,153.0646446478032],[-27.60804755865619,153.0965833377938]];
+        var layer_S3B_132 = new L.imageOverlay(img_S3B_132,
+                                              img_bounds_S3B_132,
+                                              {pane: 'pane_S3B_132'});
+        bounds_group.addLayer(layer_S3B_132);
+        map.createPane('pane_S2W10_133');
+        map.getPane('pane_S2W10_133').style.zIndex = 533;
+        var img_S2W10_133 = 'data/S2W10_133.png';
+        var img_bounds_S2W10_133 = [[-27.456856667281244,152.96825137376186],[-27.426526201258536,153.00965617887732]];
+        var layer_S2W10_133 = new L.imageOverlay(img_S2W10_133,
+                                              img_bounds_S2W10_133,
+                                              {pane: 'pane_S2W10_133'});
+        bounds_group.addLayer(layer_S2W10_133);
+        map.createPane('pane_S2W9_134');
+        map.getPane('pane_S2W9_134').style.zIndex = 534;
+        var img_S2W9_134 = 'data/S2W9_134.png';
+        var img_bounds_S2W9_134 = [[-27.50701568318165,153.01235924438197],[-27.476675312697523,153.05377757030172]];
+        var layer_S2W9_134 = new L.imageOverlay(img_S2W9_134,
+                                              img_bounds_S2W9_134,
+                                              {pane: 'pane_S2W9_134'});
+        bounds_group.addLayer(layer_S2W9_134);
+        map.createPane('pane_S2W8_135');
+        map.getPane('pane_S2W8_135').style.zIndex = 535;
+        var img_S2W8_135 = 'data/S2W8_135.png';
+        var img_bounds_S2W8_135 = [[-27.47215568083969,153.0020741020483],[-27.434343870123044,153.03454380295258]];
+        var layer_S2W8_135 = new L.imageOverlay(img_S2W8_135,
+                                              img_bounds_S2W8_135,
+                                              {pane: 'pane_S2W8_135'});
+        bounds_group.addLayer(layer_S2W8_135);
+        map.createPane('pane_S2W7_136');
+        map.getPane('pane_S2W7_136').style.zIndex = 536;
+        var img_S2W7_136 = 'data/S2W7_136.png';
+        var img_bounds_S2W7_136 = [[-27.476269369014297,153.04636055911703],[-27.43845701057444,153.07883073036135]];
+        var layer_S2W7_136 = new L.imageOverlay(img_S2W7_136,
+                                              img_bounds_S2W7_136,
+                                              {pane: 'pane_S2W7_136'});
+        bounds_group.addLayer(layer_S2W7_136);
+        map.createPane('pane_S2W6_137');
+        map.getPane('pane_S2W6_137').style.zIndex = 537;
+        var img_S2W6_137 = 'data/S2W6_137.png';
+        var img_bounds_S2W6_137 = [[-27.51995829962115,153.06231238814163],[-27.48961536909398,153.10373420883403]];
+        var layer_S2W6_137 = new L.imageOverlay(img_S2W6_137,
+                                              img_bounds_S2W6_137,
+                                              {pane: 'pane_S2W6_137'});
+        bounds_group.addLayer(layer_S2W6_137);
+        map.createPane('pane_S2W5_138');
+        map.getPane('pane_S2W5_138').style.zIndex = 538;
+        var img_S2W5_138 = 'data/S2W5_138.png';
+        var img_bounds_S2W5_138 = [[-27.52475560743721,152.9961776125245],[-27.494411727548307,153.03760072921207]];
+        var layer_S2W5_138 = new L.imageOverlay(img_S2W5_138,
+                                              img_bounds_S2W5_138,
+                                              {pane: 'pane_S2W5_138'});
+        bounds_group.addLayer(layer_S2W5_138);
+        map.createPane('pane_S2W4_139');
+        map.getPane('pane_S2W4_139').style.zIndex = 539;
+        var img_S2W4_139 = 'data/S2W4_139.png';
+        var img_bounds_S2W4_139 = [[-27.495554142036088,152.99322704858025],[-27.4652160371388,153.03464228169616]];
+        var layer_S2W4_139 = new L.imageOverlay(img_S2W4_139,
+                                              img_bounds_S2W4_139,
+                                              {pane: 'pane_S2W4_139'});
+        bounds_group.addLayer(layer_S2W4_139);
+        map.createPane('pane_S2W32_140');
+        map.getPane('pane_S2W32_140').style.zIndex = 540;
+        var img_S2W32_140 = 'data/S2W32_140.png';
+        var img_bounds_S2W32_140 = [[-27.485092261087694,152.96086144524097],[-27.454841031167454,152.9868387356399]];
+        var layer_S2W32_140 = new L.imageOverlay(img_S2W32_140,
+                                              img_bounds_S2W32_140,
+                                              {pane: 'pane_S2W32_140'});
+        bounds_group.addLayer(layer_S2W32_140);
+        map.createPane('pane_S2W31_141');
+        map.getPane('pane_S2W31_141').style.zIndex = 541;
+        var img_S2W31_141 = 'data/S2W31_141.png';
+        var img_bounds_S2W31_141 = [[-27.483839644815742,152.96507332270076],[-27.471704609483556,152.9816391338763]];
+        var layer_S2W31_141 = new L.imageOverlay(img_S2W31_141,
+                                              img_bounds_S2W31_141,
+                                              {pane: 'pane_S2W31_141'});
+        bounds_group.addLayer(layer_S2W31_141);
+        map.createPane('pane_S2W2_142');
+        map.getPane('pane_S2W2_142').style.zIndex = 542;
+        var img_S2W2_142 = 'data/S2W2_142.png';
+        var img_bounds_S2W2_142 = [[-27.56552565681402,152.94417968910628],[-27.535153025391057,152.9856345059906]];
+        var layer_S2W2_142 = new L.imageOverlay(img_S2W2_142,
+                                              img_bounds_S2W2_142,
+                                              {pane: 'pane_S2W2_142'});
+        bounds_group.addLayer(layer_S2W2_142);
+        map.createPane('pane_S2W1_143');
+        map.getPane('pane_S2W1_143').style.zIndex = 543;
+        var img_S2W1_143 = 'data/S2W1_143.png';
+        var img_bounds_S2W1_143 = [[-27.562355212806587,153.02320501700257],[-27.531983210304478,153.06463830019808]];
+        var layer_S2W1_143 = new L.imageOverlay(img_S2W1_143,
+                                              img_bounds_S2W1_143,
+                                              {pane: 'pane_S2W1_143'});
+        bounds_group.addLayer(layer_S2W1_143);
+        map.createPane('pane_S2B_144');
+        map.getPane('pane_S2B_144').style.zIndex = 544;
+        var img_S2B_144 = 'data/S2B_144.png';
+        var img_bounds_S2B_144 = [[-27.4625477858634,152.9002676095782],[-27.43425085462363,152.945364250402]];
+        var layer_S2B_144 = new L.imageOverlay(img_S2B_144,
+                                              img_bounds_S2B_144,
+                                              {pane: 'pane_S2B_144'});
+        bounds_group.addLayer(layer_S2B_144);
+        map.createPane('pane_S1W10_145');
+        map.getPane('pane_S1W10_145').style.zIndex = 545;
+        var img_S1W10_145 = 'data/S1W10_145.png';
+        var img_bounds_S1W10_145 = [[-27.493876873260447,153.0657623055106],[-27.463518436233247,153.10717708277573]];
+        var layer_S1W10_145 = new L.imageOverlay(img_S1W10_145,
+                                              img_bounds_S1W10_145,
+                                              {pane: 'pane_S1W10_145'});
+        bounds_group.addLayer(layer_S1W10_145);
+        map.createPane('pane_S1W9_146');
+        map.getPane('pane_S1W9_146').style.zIndex = 546;
+        var img_S1W9_146 = 'data/S1W9_146.png';
+        var img_bounds_S1W9_146 = [[-27.474406968340357,152.94734544058107],[-27.444073039946506,152.9887549722577]];
+        var layer_S1W9_146 = new L.imageOverlay(img_S1W9_146,
+                                              img_bounds_S1W9_146,
+                                              {pane: 'pane_S1W9_146'});
+        bounds_group.addLayer(layer_S1W9_146);
+        map.createPane('pane_S1W8_147');
+        map.getPane('pane_S1W8_147').style.zIndex = 547;
+        var img_S1W8_147 = 'data/S1W8_147.png';
+        var img_bounds_S1W8_147 = [[-27.63823831937292,153.07261706132238],[-27.600384422463218,153.1051654514211]];
+        var layer_S1W8_147 = new L.imageOverlay(img_S1W8_147,
+                                              img_bounds_S1W8_147,
+                                              {pane: 'pane_S1W8_147'});
+        bounds_group.addLayer(layer_S1W8_147);
+        map.createPane('pane_S1W7_148');
+        map.getPane('pane_S1W7_148').style.zIndex = 548;
+        var img_S1W7_148 = 'data/S1W7_148.png';
+        var img_bounds_S1W7_148 = [[-27.55621367394827,152.96602856947362],[-27.518390645152017,152.99852776858637]];
+        var layer_S1W7_148 = new L.imageOverlay(img_S1W7_148,
+                                              img_bounds_S1W7_148,
+                                              {pane: 'pane_S1W7_148'});
+        bounds_group.addLayer(layer_S1W7_148);
+        map.createPane('pane_S1W6_149');
+        map.getPane('pane_S1W6_149').style.zIndex = 549;
+        var img_S1W6_149 = 'data/S1W6_149.png';
+        var img_bounds_S1W6_149 = [[-27.51061485249163,152.98927932672555],[-27.480273769859537,153.0306986248146]];
+        var layer_S1W6_149 = new L.imageOverlay(img_S1W6_149,
+                                              img_bounds_S1W6_149,
+                                              {pane: 'pane_S1W6_149'});
+        bounds_group.addLayer(layer_S1W6_149);
+        map.createPane('pane_S1W5_150');
+        map.getPane('pane_S1W5_150').style.zIndex = 550;
+        var img_S1W5_150 = 'data/S1W5_150.png';
+        var img_bounds_S1W5_150 = [[-27.462501890676858,152.99622396844399],[-27.432170311170065,153.03763029360175]];
+        var layer_S1W5_150 = new L.imageOverlay(img_S1W5_150,
+                                              img_bounds_S1W5_150,
+                                              {pane: 'pane_S1W5_150'});
+        bounds_group.addLayer(layer_S1W5_150);
+        map.createPane('pane_S1W4_151');
+        map.getPane('pane_S1W4_151').style.zIndex = 551;
+        var img_S1W4_151 = 'data/S1W4_151.png';
+        var img_bounds_S1W4_151 = [[-27.508449090123936,152.95552049080885],[-27.470632442411798,152.98799434533058]];
+        var layer_S1W4_151 = new L.imageOverlay(img_S1W4_151,
+                                              img_bounds_S1W4_151,
+                                              {pane: 'pane_S1W4_151'});
+        bounds_group.addLayer(layer_S1W4_151);
+        map.createPane('pane_S1W3_152');
+        map.getPane('pane_S1W3_152').style.zIndex = 552;
+        var img_S1W3_152 = 'data/S1W3_152.png';
+        var img_bounds_S1W3_152 = [[-27.557718686277944,153.05993997940635],[-27.527443806337942,153.08593982380626]];
+        var layer_S1W3_152 = new L.imageOverlay(img_S1W3_152,
+                                              img_bounds_S1W3_152,
+                                              {pane: 'pane_S1W3_152'});
+        bounds_group.addLayer(layer_S1W3_152);
+        map.createPane('pane_S1W2_153');
+        map.getPane('pane_S1W2_153').style.zIndex = 553;
+        var img_S1W2_153 = 'data/S1W2_153.png';
+        var img_bounds_S1W2_153 = [[-27.54840900397943,153.02432286264795],[-27.518039768668345,153.06575237085994]];
+        var layer_S1W2_153 = new L.imageOverlay(img_S1W2_153,
+                                              img_bounds_S1W2_153,
+                                              {pane: 'pane_S1W2_153'});
+        bounds_group.addLayer(layer_S1W2_153);
+        map.createPane('pane_S1W1_154');
+        map.getPane('pane_S1W1_154').style.zIndex = 554;
+        var img_S1W1_154 = 'data/S1W1_154.png';
+        var img_bounds_S1W1_154 = [[-27.529979638237464,153.05948601508362],[-27.499614055652156,153.10091054027149]];
+        var layer_S1W1_154 = new L.imageOverlay(img_S1W1_154,
+                                              img_bounds_S1W1_154,
+                                              {pane: 'pane_S1W1_154'});
+        bounds_group.addLayer(layer_S1W1_154);
+        map.createPane('pane_S1B_155');
+        map.getPane('pane_S1B_155').style.zIndex = 555;
+        var img_S1B_155 = 'data/S1B_155.png';
+        var img_bounds_S1B_155 = [[-27.4897151771,153.01296961],[-27.4496952318,153.044862286]];
+        var layer_S1B_155 = new L.imageOverlay(img_S1B_155,
+                                              img_bounds_S1B_155,
+                                              {pane: 'pane_S1B_155'});
+        bounds_group.addLayer(layer_S1B_155);
+        map.createPane('pane_P2_156');
+        map.getPane('pane_P2_156').style.zIndex = 556;
+        var img_P2_156 = 'data/P2_156.png';
+        var img_bounds_P2_156 = [[-27.500031940349096,153.059806241546],[-27.469672286264867,153.10122267911223]];
+        var layer_P2_156 = new L.imageOverlay(img_P2_156,
+                                              img_bounds_P2_156,
+                                              {pane: 'pane_P2_156'});
+        bounds_group.addLayer(layer_P2_156);
+        map.createPane('pane_P1_157');
+        map.getPane('pane_P1_157').style.zIndex = 557;
+        var img_P1_157 = 'data/P1_157.png';
+        var img_bounds_P1_157 = [[-27.548421818228917,153.01650831111166],[-27.518073249953545,153.05793782802164]];
+        var layer_P1_157 = new L.imageOverlay(img_P1_157,
+                                              img_bounds_P1_157,
+                                              {pane: 'pane_P1_157'});
+        bounds_group.addLayer(layer_P1_157);
+        map.createPane('pane_H29_158');
+        map.getPane('pane_H29_158').style.zIndex = 558;
+        var img_H29_158 = 'data/H29_158.png';
+        var img_bounds_H29_158 = [[-27.47580167846245,152.98855877969203],[-27.445519665406945,153.01456699342333]];
+        var layer_H29_158 = new L.imageOverlay(img_H29_158,
+                                              img_bounds_H29_158,
+                                              {pane: 'pane_H29_158'});
+        bounds_group.addLayer(layer_H29_158);
+        map.createPane('pane_H28_159');
+        map.getPane('pane_H28_159').style.zIndex = 559;
+        var img_H28_159 = 'data/H28_159.png';
+        var img_bounds_H28_159 = [[-27.690601443229507,153.2722677308623],[-27.65270074716554,153.3049016810128]];
+        var layer_H28_159 = new L.imageOverlay(img_H28_159,
+                                              img_bounds_H28_159,
+                                              {pane: 'pane_H28_159'});
+        bounds_group.addLayer(layer_H28_159);
+        map.createPane('pane_H27_160');
+        map.getPane('pane_H27_160').style.zIndex = 560;
+        var img_H27_160 = 'data/H27_160.png';
+        var img_bounds_H27_160 = [[-27.5470876037034,153.0164688743527],[-27.516677287373906,153.05791869368693]];
+        var layer_H27_160 = new L.imageOverlay(img_H27_160,
+                                              img_bounds_H27_160,
+                                              {pane: 'pane_H27_160'});
+        bounds_group.addLayer(layer_H27_160);
+        map.createPane('pane_H26_161');
+        map.getPane('pane_H26_161').style.zIndex = 561;
+        var img_H26_161 = 'data/H26_161.png';
+        var img_bounds_H26_161 = [[-27.431340911887574,152.89066336331032],[-27.40099481840288,152.93206130159714]];
+        var layer_H26_161 = new L.imageOverlay(img_H26_161,
+                                              img_bounds_H26_161,
+                                              {pane: 'pane_H26_161'});
+        bounds_group.addLayer(layer_H26_161);
+        map.createPane('pane_H25_162');
+        map.getPane('pane_H25_162').style.zIndex = 562;
+        var img_H25_162 = 'data/H25_162.png';
+        var img_bounds_H25_162 = [[-27.555289423740852,153.2236197385306],[-27.517863792682057,153.25554276884455]];
+        var layer_H25_162 = new L.imageOverlay(img_H25_162,
+                                              img_bounds_H25_162,
+                                              {pane: 'pane_H25_162'});
+        bounds_group.addLayer(layer_H25_162);
+        map.createPane('pane_H24_163');
+        map.getPane('pane_H24_163').style.zIndex = 563;
+        var img_H24_163 = 'data/H24_163.png';
+        var img_bounds_H24_163 = [[-27.541648476599224,152.83074167332902],[-27.505207723849793,152.88045390512607]];
+        var layer_H24_163 = new L.imageOverlay(img_H24_163,
+                                              img_bounds_H24_163,
+                                              {pane: 'pane_H24_163'});
+        bounds_group.addLayer(layer_H24_163);
+        map.createPane('pane_H23_164');
+        map.getPane('pane_H23_164').style.zIndex = 564;
+        var img_H23_164 = 'data/H23_164.png';
+        var img_bounds_H23_164 = [[-27.49701969677985,152.91724350634658],[-27.459407591049956,152.96136539960665]];
+        var layer_H23_164 = new L.imageOverlay(img_H23_164,
+                                              img_bounds_H23_164,
+                                              {pane: 'pane_H23_164'});
+        bounds_group.addLayer(layer_H23_164);
+        map.createPane('pane_H22_165');
+        map.getPane('pane_H22_165').style.zIndex = 565;
+        var img_H22_165 = 'data/H22_165.png';
+        var img_bounds_H22_165 = [[-27.405118976247238,152.9496331547031],[-27.374757396142325,152.99102404349918]];
+        var layer_H22_165 = new L.imageOverlay(img_H22_165,
+                                              img_bounds_H22_165,
+                                              {pane: 'pane_H22_165'});
+        bounds_group.addLayer(layer_H22_165);
+        map.createPane('pane_H21_166');
+        map.getPane('pane_H21_166').style.zIndex = 566;
+        var img_H21_166 = 'data/H21_166.png';
+        var img_bounds_H21_166 = [[-27.569064373221682,152.8966629611566],[-27.54381831290414,152.9352867454917]];
+        var layer_H21_166 = new L.imageOverlay(img_H21_166,
+                                              img_bounds_H21_166,
+                                              {pane: 'pane_H21_166'});
+        bounds_group.addLayer(layer_H21_166);
+        map.createPane('pane_H20_167');
+        map.getPane('pane_H20_167').style.zIndex = 567;
+        var img_H20_167 = 'data/H20_167.png';
+        var img_bounds_H20_167 = [[-27.46638755363648,152.89575689287415],[-27.43006383192202,152.9395395813343]];
+        var layer_H20_167 = new L.imageOverlay(img_H20_167,
+                                              img_bounds_H20_167,
+                                              {pane: 'pane_H20_167'});
+        bounds_group.addLayer(layer_H20_167);
+        map.createPane('pane_H19_168');
+        map.getPane('pane_H19_168').style.zIndex = 568;
+        var img_H19_168 = 'data/H19_168.png';
+        var img_bounds_H19_168 = [[-27.537497073093785,153.09319736963783],[-27.500192969622073,153.12495948968643]];
+        var layer_H19_168 = new L.imageOverlay(img_H19_168,
+                                              img_bounds_H19_168,
+                                              {pane: 'pane_H19_168'});
+        bounds_group.addLayer(layer_H19_168);
+        map.createPane('pane_H18_169');
+        map.getPane('pane_H18_169').style.zIndex = 569;
+        var img_H18_169 = 'data/H18_169.png';
+        var img_bounds_H18_169 = [[-27.42184675103166,153.04902044621753],[-27.38513361822824,153.0799555792125]];
+        var layer_H18_169 = new L.imageOverlay(img_H18_169,
+                                              img_bounds_H18_169,
+                                              {pane: 'pane_H18_169'});
+        bounds_group.addLayer(layer_H18_169);
+        map.createPane('pane_H17_170');
+        map.getPane('pane_H17_170').style.zIndex = 570;
+        var img_H17_170 = 'data/H17_170.png';
+        var img_bounds_H17_170 = [[-27.40107612111585,152.90100222429183],[-27.370735987793747,152.9423920317646]];
+        var layer_H17_170 = new L.imageOverlay(img_H17_170,
+                                              img_bounds_H17_170,
+                                              {pane: 'pane_H17_170'});
+        bounds_group.addLayer(layer_H17_170);
+        map.createPane('pane_H16_171');
+        map.getPane('pane_H16_171').style.zIndex = 571;
+        var img_H16_171 = 'data/H16_171.png';
+        var img_bounds_H16_171 = [[-27.585542872813257,153.05316791366425],[-27.547676186424503,153.08571021812637]];
+        var layer_H16_171 = new L.imageOverlay(img_H16_171,
+                                              img_bounds_H16_171,
+                                              {pane: 'pane_H16_171'});
+        bounds_group.addLayer(layer_H16_171);
+        map.createPane('pane_H15_172');
+        map.getPane('pane_H15_172').style.zIndex = 572;
+        var img_H15_172 = 'data/H15_172.png';
+        var img_bounds_H15_172 = [[-27.41117782456841,153.0241149042778],[-27.37335426442837,153.05659749975766]];
+        var layer_H15_172 = new L.imageOverlay(img_H15_172,
+                                              img_bounds_H15_172,
+                                              {pane: 'pane_H15_172'});
+        bounds_group.addLayer(layer_H15_172);
+        map.createPane('pane_H14_173');
+        map.getPane('pane_H14_173').style.zIndex = 573;
+        var img_H14_173 = 'data/H14_173.png';
+        var img_bounds_H14_173 = [[-27.580548218282264,153.08197609935618],[-27.542682201640172,153.11451782824378]];
+        var layer_H14_173 = new L.imageOverlay(img_H14_173,
+                                              img_bounds_H14_173,
+                                              {pane: 'pane_H14_173'});
+        bounds_group.addLayer(layer_H14_173);
+        map.createPane('pane_H13_174');
+        map.getPane('pane_H13_174').style.zIndex = 574;
+        var img_H13_174 = 'data/H13_174.png';
+        var img_bounds_H13_174 = [[-27.42318635311794,152.95254966714737],[-27.39282121367448,152.9939454082662]];
+        var layer_H13_174 = new L.imageOverlay(img_H13_174,
+                                              img_bounds_H13_174,
+                                              {pane: 'pane_H13_174'});
+        bounds_group.addLayer(layer_H13_174);
+        map.createPane('pane_H12_175');
+        map.getPane('pane_H12_175').style.zIndex = 575;
+        var img_H12_175 = 'data/H12_175.png';
+        var img_bounds_H12_175 = [[-27.586751452913393,153.0339735288535],[-27.548904469183896,153.06651597470594]];
+        var layer_H12_175 = new L.imageOverlay(img_H12_175,
+                                              img_bounds_H12_175,
+                                              {pane: 'pane_H12_175'});
+        bounds_group.addLayer(layer_H12_175);
+        map.createPane('pane_H11_176');
+        map.getPane('pane_H11_176').style.zIndex = 576;
+        var img_H11_176 = 'data/H11_176.png';
+        var img_bounds_H11_176 = [[-27.599430587179487,152.95876395518573],[-27.566673238442306,153.00130301222637]];
+        var layer_H11_176 = new L.imageOverlay(img_H11_176,
+                                              img_bounds_H11_176,
+                                              {pane: 'pane_H11_176'});
+        bounds_group.addLayer(layer_H11_176);
+        map.createPane('pane_H10_177');
+        map.getPane('pane_H10_177').style.zIndex = 577;
+        var img_H10_177 = 'data/H10_177.png';
+        var img_bounds_H10_177 = [[-27.401952783412458,152.9814105698343],[-27.359326079935762,153.02288573684075]];
+        var layer_H10_177 = new L.imageOverlay(img_H10_177,
+                                              img_bounds_H10_177,
+                                              {pane: 'pane_H10_177'});
+        bounds_group.addLayer(layer_H10_177);
+        map.createPane('pane_H9_178');
+        map.getPane('pane_H9_178').style.zIndex = 578;
+        var img_H9_178 = 'data/H9_178.png';
+        var img_bounds_H9_178 = [[-27.626205544127362,153.1234612429389],[-27.58357766731725,153.1672473735585]];
+        var layer_H9_178 = new L.imageOverlay(img_H9_178,
+                                              img_bounds_H9_178,
+                                              {pane: 'pane_H9_178'});
+        bounds_group.addLayer(layer_H9_178);
+        map.createPane('pane_H8_179');
+        map.getPane('pane_H8_179').style.zIndex = 579;
+        var img_H8_179 = 'data/H8_179.png';
+        var img_bounds_H8_179 = [[-27.66219441578623,152.88147419376634],[-27.631802543460736,152.92295527205948]];
+        var layer_H8_179 = new L.imageOverlay(img_H8_179,
+                                              img_bounds_H8_179,
+                                              {pane: 'pane_H8_179'});
+        bounds_group.addLayer(layer_H8_179);
+        map.createPane('pane_H7_180');
+        map.getPane('pane_H7_180').style.zIndex = 580;
+        var img_H7_180 = 'data/H7_180.png';
+        var img_bounds_H7_180 = [[-27.584702113551174,153.14463418027137],[-27.55428432067808,153.18611486858097]];
+        var layer_H7_180 = new L.imageOverlay(img_H7_180,
+                                              img_bounds_H7_180,
+                                              {pane: 'pane_H7_180'});
+        bounds_group.addLayer(layer_H7_180);
+        map.createPane('pane_H6_181');
+        map.getPane('pane_H6_181').style.zIndex = 581;
+        var img_H6_181 = 'data/H6_181.png';
+        var img_bounds_H6_181 = [[-27.54634664827527,153.01027058630928],[-27.50512588972979,153.05455085953116]];
+        var layer_H6_181 = new L.imageOverlay(img_H6_181,
+                                              img_bounds_H6_181,
+                                              {pane: 'pane_H6_181'});
+        bounds_group.addLayer(layer_H6_181);
+        map.createPane('pane_H5_182');
+        map.getPane('pane_H5_182').style.zIndex = 582;
+        var img_H5_182 = 'data/H5_182.png';
+        var img_bounds_H5_182 = [[-27.51228090469935,152.921247894835],[-27.46687708884064,152.96021652419407]];
+        var layer_H5_182 = new L.imageOverlay(img_H5_182,
+                                              img_bounds_H5_182,
+                                              {pane: 'pane_H5_182'});
+        bounds_group.addLayer(layer_H5_182);
+        map.createPane('pane_H4_183');
+        map.getPane('pane_H4_183').style.zIndex = 583;
+        var img_H4_183 = 'data/H4_183.png';
+        var img_bounds_H4_183 = [[-27.531451516522267,152.99629920947484],[-27.493611936722765,153.02879556252051]];
+        var layer_H4_183 = new L.imageOverlay(img_H4_183,
+                                              img_bounds_H4_183,
+                                              {pane: 'pane_H4_183'});
+        bounds_group.addLayer(layer_H4_183);
+        map.createPane('pane_H3_184');
+        map.getPane('pane_H3_184').style.zIndex = 584;
+        var img_H3_184 = 'data/H3_184.png';
+        var img_bounds_H3_184 = [[-27.495609685397287,153.04941927164134],[-27.465250904758978,153.09083451765846]];
+        var layer_H3_184 = new L.imageOverlay(img_H3_184,
+                                              img_bounds_H3_184,
+                                              {pane: 'pane_H3_184'});
+        bounds_group.addLayer(layer_H3_184);
+        map.createPane('pane_H2_185');
+        map.getPane('pane_H2_185').style.zIndex = 585;
+        var img_H2_185 = 'data/H2_185.png';
+        var img_bounds_H2_185 = [[-27.482234602907997,153.03280226037464],[-27.45196779079824,153.05879517618123]];
+        var layer_H2_185 = new L.imageOverlay(img_H2_185,
+                                              img_bounds_H2_185,
+                                              {pane: 'pane_H2_185'});
+        bounds_group.addLayer(layer_H2_185);
+        map.createPane('pane_H1_186');
+        map.getPane('pane_H1_186').style.zIndex = 586;
+        var img_H1_186 = 'data/H1_186.png';
+        var img_bounds_H1_186 = [[-27.668223787382118,152.99739019127392],[-27.63783071113586,153.0388729127673]];
+        var layer_H1_186 = new L.imageOverlay(img_H1_186,
+                                              img_bounds_H1_186,
+                                              {pane: 'pane_H1_186'});
+        bounds_group.addLayer(layer_H1_186);
+        var baseMaps = {};
+        var overlaysTree = [
+        {label: '<b>Holiday Editions</b>', selectAllCheckbox: true, collapsed: true, children: [
+            {label: "H1", layer: layer_H1_186},
+            {label: "H2", layer: layer_H2_185},
+            {label: "H3", layer: layer_H3_184},
+            {label: "H4", layer: layer_H4_183},
+            {label: "H5", layer: layer_H5_182},
+            {label: "H6", layer: layer_H6_181},
+            {label: "H7", layer: layer_H7_180},
+            {label: "H8", layer: layer_H8_179},
+            {label: "H9", layer: layer_H9_178},
+            {label: "H10", layer: layer_H10_177},
+            {label: "H11", layer: layer_H11_176},
+            {label: "H12", layer: layer_H12_175},
+            {label: "H13", layer: layer_H13_174},
+            {label: "H14", layer: layer_H14_173},
+            {label: "H15", layer: layer_H15_172},
+            {label: "H16", layer: layer_H16_171},
+            {label: "H17", layer: layer_H17_170},
+            {label: "H18", layer: layer_H18_169},
+            {label: "H19", layer: layer_H19_168},
+            {label: "H20", layer: layer_H20_167},
+            {label: "H21", layer: layer_H21_166},
+            {label: "H22", layer: layer_H22_165},
+            {label: "H23", layer: layer_H23_164},
+            {label: "H24", layer: layer_H24_163},
+            {label: "H25", layer: layer_H25_162},
+            {label: "H26", layer: layer_H26_161},
+            {label: "H27", layer: layer_H27_160},
+            {label: "H28", layer: layer_H28_159},
+            {label: "H29", layer: layer_H29_158},]},
+        {label: '<b>Preview Series</b>', selectAllCheckbox: true, collapsed: true, children: [
+            {label: "P1", layer: layer_P1_157},
+            {label: "P2", layer: layer_P2_156},]},
+        {label: '<b>Series 1</b>', selectAllCheckbox: true, collapsed: true, children: [
+            {label: "S1B", layer: layer_S1B_155},
+            {label: "S1W1", layer: layer_S1W1_154},
+            {label: "S1W2", layer: layer_S1W2_153},
+            {label: "S1W3", layer: layer_S1W3_152},
+            {label: "S1W4", layer: layer_S1W4_151},
+            {label: "S1W5", layer: layer_S1W5_150},
+            {label: "S1W6", layer: layer_S1W6_149},
+            {label: "S1W7", layer: layer_S1W7_148},
+            {label: "S1W8", layer: layer_S1W8_147},
+            {label: "S1W9", layer: layer_S1W9_146},
+            {label: "S1W10", layer: layer_S1W10_145},]},
+        {label: '<b>Series 2</b>', selectAllCheckbox: true, collapsed: true, children: [
+            {label: "S2B", layer: layer_S2B_144},
+            {label: "S2W1", layer: layer_S2W1_143},
+            {label: "S2W2", layer: layer_S2W2_142},
+            {label: "S2W3-1", layer: layer_S2W31_141},
+            {label: "S2W3-2", layer: layer_S2W32_140},
+            {label: "S2W4", layer: layer_S2W4_139},
+            {label: "S2W5", layer: layer_S2W5_138},
+            {label: "S2W6", layer: layer_S2W6_137},
+            {label: "S2W7", layer: layer_S2W7_136},
+            {label: "S2W8", layer: layer_S2W8_135},
+            {label: "S2W9", layer: layer_S2W9_134},
+            {label: "S2W10", layer: layer_S2W10_133},]},
+        {label: '<b>Series 3</b>', selectAllCheckbox: true, collapsed: true, children: [
+            {label: "S3B", layer: layer_S3B_132},
+            {label: "S3W1", layer: layer_S3W1_131},
+            {label: "S3W2", layer: layer_S3W2_130},
+            {label: "S3W3", layer: layer_S3W3_129},
+            {label: "S3W4", layer: layer_S3W4_128},
+            {label: "S3W5", layer: layer_S3W5_127},
+            {label: "S3W6", layer: layer_S3W6_126},
+            {label: "S3W7", layer: layer_S3W7_125},
+            {label: "S3W8", layer: layer_S3W8_124},
+            {label: "S3W9", layer: layer_S3W9_123},
+            {label: "S3W10", layer: layer_S3W10_122},]},
+        {label: '<b>Series 4</b>', selectAllCheckbox: true, collapsed: true, children: [
+            {label: "S4B", layer: layer_S4B_121},
+            {label: "S4W1", layer: layer_S4W1_120},
+            {label: "S4W2", layer: layer_S4W2_119},
+            {label: "S4W3", layer: layer_S4W3_118},
+            {label: "S4W4", layer: layer_S4W4_117},
+            {label: "S4W5", layer: layer_S4W5_116},
+            {label: "S4W6", layer: layer_S4W6_115},
+            {label: "S4W7", layer: layer_S4W7_114},
+            {label: "S4W8", layer: layer_S4W8_113},
+            {label: "S4W9", layer: layer_S4W9_112},
+            {label: "S4W10", layer: layer_S4W10_111},]},
+        {label: '<b>Series 5</b>', selectAllCheckbox: true, collapsed: true, children: [
+            {label: "S5B", layer: layer_S5B_110},
+            {label: "S5W1", layer: layer_S5W1_109},
+            {label: "S5W2", layer: layer_S5W2_108},
+            {label: "S5W3", layer: layer_S5W3_107},
+            {label: "S5W4", layer: layer_S5W4_106},
+            {label: "S5W5", layer: layer_S5W5_105},
+            {label: "S5W6", layer: layer_S5W6_104},
+            {label: "S5W7", layer: layer_S5W7_103},
+            {label: "S5W8", layer: layer_S5W8_102},
+            {label: "S5W9", layer: layer_S5W9_101},
+            {label: "S5W10", layer: layer_S5W10_100},]},
+        {label: '<b>Series 6</b>', selectAllCheckbox: true, collapsed: true, children: [
+            {label: "S6B", layer: layer_S6B_99},
+            {label: "S6W1", layer: layer_S6W1_98},
+            {label: "S6W2", layer: layer_S6W2_97},
+            {label: "S6W3", layer: layer_S6W3_96},
+            {label: "S6W4", layer: layer_S6W4_95},
+            {label: "S6W5", layer: layer_S6W5_94},
+            {label: "S6W6", layer: layer_S6W6_93},
+            {label: "S6W7", layer: layer_S6W7_92},
+            {label: "S6W8", layer: layer_S6W8_91},
+            {label: "S6W9", layer: layer_S6W9_90},
+            {label: "S6W10", layer: layer_S6W10_89},]},
+        {label: '<b>Series 7</b>', selectAllCheckbox: true, collapsed: true, children: [
+            {label: "S7B", layer: layer_S7B_88},
+            {label: "S7W1", layer: layer_S7W1_87},
+            {label: "S7W2", layer: layer_S7W2_86},
+            {label: "S7W3", layer: layer_S7W3_85},
+            {label: "S7W4", layer: layer_S7W4_84},
+            {label: "S7W5", layer: layer_S7W5_83},
+            {label: "S7W6", layer: layer_S7W6_82},
+            {label: "S7W7", layer: layer_S7W7_81},
+            {label: "S7W8", layer: layer_S7W8_80},
+            {label: "S7W9", layer: layer_S7W9_79},
+            {label: "S7W10", layer: layer_S7W10_78},]},
+        {label: '<b>Series 8</b>', selectAllCheckbox: true, collapsed: true, children: [
+            {label: "S8B", layer: layer_S8B_77},
+            {label: "S8W1", layer: layer_S8W1_76},
+            {label: "S8W2", layer: layer_S8W2_75},
+            {label: "S8W3", layer: layer_S8W3_74},
+            {label: "S8W4", layer: layer_S8W4_73},
+            {label: "S8W5", layer: layer_S8W5_72},
+            {label: "S8W6", layer: layer_S8W6_71},
+            {label: "S8W7", layer: layer_S8W7_70},
+            {label: "S8W8", layer: layer_S8W8_69},
+            {label: "S8W9", layer: layer_S8W9_68},
+            {label: "S8W10", layer: layer_S8W10_67},]},
+        {label: '<b>Series 9</b>', selectAllCheckbox: true, collapsed: true, children: [
+            {label: "S9B1", layer: layer_S9B1_66},
+            {label: "S9B2", layer: layer_S9B2_65},
+            {label: "S9B3", layer: layer_S9B3_64},
+            {label: "S9W1", layer: layer_S9W1_63},
+            {label: "S9W2", layer: layer_S9W2_62},
+            {label: "S9W3", layer: layer_S9W3_61},
+            {label: "S9W4", layer: layer_S9W4_60},
+            {label: "S9W5", layer: layer_S9W5_59},
+            {label: "S9W6", layer: layer_S9W6_58},
+            {label: "S9W7", layer: layer_S9W7_57},
+            {label: "S9W8", layer: layer_S9W8_56},
+            {label: "S9W9", layer: layer_S9W9_55},
+            {label: "S9W10", layer: layer_S9W10_54},]},
+        {label: '<b>Series 10</b>', selectAllCheckbox: true, collapsed: true, children: [
+            {label: "S10B", layer: layer_S10B_53},
+            {label: "S10W1", layer: layer_S10W1_52},
+            {label: "S10W2", layer: layer_S10W2_51},
+            {label: "S10W3", layer: layer_S10W3_50},
+            {label: "S10W4", layer: layer_S10W4_49},
+            {label: "S10W5", layer: layer_S10W5_48},
+            {label: "S10W6", layer: layer_S10W6_47},
+            {label: "S10W7", layer: layer_S10W7_46},
+            {label: "S10W8", layer: layer_S10W8_45},
+            {label: "S10W9", layer: layer_S10W9_44},
+            {label: "S10W10", layer: layer_S10W10_43},]},
+        {label: '<b>Series 11</b>', selectAllCheckbox: true, collapsed: true, children: [
+            {label: "S11B", layer: layer_S11B_42},
+            {label: "S11W1", layer: layer_S11W1_41},
+            {label: "S11W2", layer: layer_S11W2_40},
+            {label: "S11W3", layer: layer_S11W3_39},
+            {label: "S11W4", layer: layer_S11W4_38},
+            {label: "S11W5", layer: layer_S11W5_37},
+            {label: "S11W6", layer: layer_S11W6_36},
+            {label: "S11W7", layer: layer_S11W7_35},
+            {label: "S11W8", layer: layer_S11W8_34},
+            {label: "S11W9", layer: layer_S11W9_33},
+            {label: "S11W10", layer: layer_S11W10_32},]},
+        {label: '<b>Series 12</b>', selectAllCheckbox: true, collapsed: true, children: [
+            {label: "S12W1", layer: layer_S12W1_31},
+            {label: "S12W2", layer: layer_S12W2_30},
+            {label: "S12W3", layer: layer_S12W3_29},
+            {label: "S12W4", layer: layer_S12W4_28},
+            {label: "S12W5", layer: layer_S12W5_27},
+            {label: "S12W6", layer: layer_S12W6_26},
+            {label: "S12W7", layer: layer_S12W7_25},
+            {label: "S12W8", layer: layer_S12W8_24},
+            {label: "S12W9", layer: layer_S12W9_23},
+            {label: "S12W10", layer: layer_S12W10_22},]},
+        {label: '<b>Series 13</b>', selectAllCheckbox: true, collapsed: true, children: [
+            {label: "S13B", layer: layer_S13B_21},
+            {label: "S13W1", layer: layer_S13W1_20},
+            {label: "S13W2", layer: layer_S13W2_19},
+            {label: "S13W3", layer: layer_S13W3_18},
+            {label: "S13W4", layer: layer_S13W4_17},
+            {label: "S13W5", layer: layer_S13W5_16},
+            {label: "S13W6", layer: layer_S13W6_15},
+            {label: "S13W7", layer: layer_S13W7_14},
+            {label: "S13W8", layer: layer_S13W8_13},
+            {label: "S13W9", layer: layer_S13W9_12},
+            {label: "S13W10", layer: layer_S13W10_11},]},
+        {label: '<b>Series 14</b>', selectAllCheckbox: true, collapsed: false, children: [
+            {label: "S14W1", layer: layer_S14W1_10},]},
+        {label: '<b>Special Editions</b>', selectAllCheckbox: true, collapsed: true, children: [
+            {label: "Summer-Leg6", layer: layer_SummerLeg6_9},
+            {label: "Summer-Leg5", layer: layer_SummerLeg5_8},
+            {label: "Summer-Leg4", layer: layer_SummerLeg4_7},
+            {label: "Summer-Leg3", layer: layer_SummerLeg3_6},
+            {label: "Summer-Leg2", layer: layer_SummerLeg2_5},
+            {label: "Summer-Leg1", layer: layer_SummerLeg1_4},
+            {label: "Indigenous", layer: layer_Indigenous_3},
+            {label: "Demo", layer: layer_Demo_2},
+            {label: "Caba", layer: layer_Caba_1},]},
+        {label: '<b>Backgrounds</b>', selectAllCheckbox: true, collapsed: true, children: [
+            {label: "OpenStreetMap", layer: layer_OpenStreetMap_0},]},]
+        var lay = L.control.layers.tree(null, overlaysTree,{
+            //namedToggle: true,
+            //selectorBack: false,
+            //closedSymbol: '&#8862; &#x1f5c0;',
+            //openedSymbol: '&#8863; &#x1f5c1;',
+            //collapseAll: 'Collapse all',
+            //expandAll: 'Expand all',
+            collapsed: false,
+        });
         lay.addTo(map);
+        setBounds();
+        L.ImageOverlay.include({
+            getBounds: function () {
+                return this._bounds;
+            }
+        });
         </script>
     </body>
 </html>

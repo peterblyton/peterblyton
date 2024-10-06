@@ -5,6 +5,10 @@
     background-image: none;
 }
 
+.leaflet-control-layers-list{
+	font: 13px / 1.7 "Helvetica Neue", Arial, Helvetica, sans-serif;
+}
+
 .leaflet-layerstree-node {
 }
 
@@ -29,13 +33,14 @@
 }
 
 .leaflet-layerstree-header-name {
+	padding-left: 2px;
 }
 
 .leaflet-layerstree-header-space {
 }
 
 .leaflet-layerstree-children {
-    padding-left: 10px;
+    padding-left: 20px;
 }
 
 .leaflet-layerstree-children-nopad {
